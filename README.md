@@ -12,9 +12,32 @@ Personal finance tools want your bank credentials, your data on their servers, o
 - **No database.** Your entire financial state is human-readable JSON you can open, diff, back up, or version yourself. Writes are atomic (temp file + rename) and every save keeps a `.bak` of the previous version.
 - **Data is separate from code.** The app reads whatever directory `DATA_DIR` points at (default `./data`, gitignored). Point it at a synced folder, an encrypted volume, or your note vault — the repo never contains a real number.
 
+## Requirements
+
+**Node.js 18+.** That's it — no database, no compiler toolchain, no system libraries.
+The PDF/OCR pipeline (`pdfjs-dist`, `@napi-rs/canvas`, `tesseract.js`) ships as prebuilt
+binaries and WASM for Linux (glibc and musl/Alpine), macOS (Intel and Apple Silicon), and
+Windows — `npm install` just works, with nothing to compile.
+
+Don't have Node yet?
+
+```bash
+# macOS (Homebrew)
+brew install node
+
+# Linux (nvm — works on any distro, no root needed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+nvm install --lts
+
+# Windows
+winget install OpenJS.NodeJS.LTS
+```
+
 ## Quick start
 
 ```bash
+git clone https://github.com/anothersummerofsleep/finfolio.git
+cd finfolio
 npm install
 npm run demo     # explore with generated sample data (throwaway copy)
 npm start        # real mode — starts empty, data lives in ./data
