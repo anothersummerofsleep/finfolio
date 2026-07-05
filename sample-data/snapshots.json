@@ -1,0 +1,184 @@
+[
+  {
+    "date": "2025-01-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 32000
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 38000
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 67200
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 114800,
+        "liquidationValue": 28000
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 8000
+      }
+    ]
+  },
+  {
+    "date": "2025-04-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 33158
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 42140
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 68006
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 116178,
+        "liquidationValue": 28336
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 8929
+      }
+    ]
+  },
+  {
+    "date": "2025-07-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 34405
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 46404
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 68822
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 117572,
+        "liquidationValue": 28676
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 8664
+      }
+    ]
+  },
+  {
+    "date": "2025-10-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 34678
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 51260
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 69648
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 118983,
+        "liquidationValue": 29020
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 9264
+      }
+    ]
+  },
+  {
+    "date": "2026-01-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 34716
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 56311
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 70484
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 120410,
+        "liquidationValue": 29368
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 9753
+      }
+    ]
+  },
+  {
+    "date": "2026-04-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 34707
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 61563
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 71330
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 121855,
+        "liquidationValue": 29721
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 8880
+      }
+    ]
+  },
+  {
+    "date": "2026-07-01",
+    "values": [
+      {
+        "sleeveId": "cash",
+        "marketValue": 34784
+      },
+      {
+        "sleeveId": "brokerage",
+        "marketValue": 64563
+      },
+      {
+        "sleeveId": "retirement",
+        "marketValue": 72186
+      },
+      {
+        "sleeveId": "endowment",
+        "marketValue": 123318,
+        "liquidationValue": 30077
+      },
+      {
+        "sleeveId": "crypto",
+        "marketValue": 7909
+      }
+    ]
+  }
+]

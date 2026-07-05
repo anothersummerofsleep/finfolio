@@ -1,0 +1,72 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1412 >>
+stream
+BT /F1 9 Tf
+1 0 0 1 40 800 Tm (HSBC Bank \(Singapore\) Limited) Tj
+1 0 0 1 40 778 Tm (Statement of Account) Tj
+1 0 0 1 40 756 Tm (Statement period 01 Jul 2025 to 31 Jul 2025) Tj
+1 0 0 1 40 726 Tm (Date) Tj
+1 0 0 1 110 726 Tm (Transaction details) Tj
+1 0 0 1 360 726 Tm (Withdrawal) Tj
+1 0 0 1 440 726 Tm (Deposit) Tj
+1 0 0 1 510 726 Tm (Balance) Tj
+1 0 0 1 40 704 Tm (01 Jul) Tj
+1 0 0 1 110 704 Tm (BALANCE B/F) Tj
+1 0 0 1 510 704 Tm (5,000.00) Tj
+1 0 0 1 40 682 Tm (02 Jul) Tj
+1 0 0 1 110 682 Tm (POS PURCHASE NTUC FAIRPRICE) Tj
+1 0 0 1 360 682 Tm (85.20) Tj
+1 0 0 1 510 682 Tm (4,914.80) Tj
+1 0 0 1 40 660 Tm (05 Jul) Tj
+1 0 0 1 110 660 Tm (GIRO SALARY ACME PTE LTD) Tj
+1 0 0 1 440 660 Tm (6,000.00) Tj
+1 0 0 1 510 660 Tm (10,914.80) Tj
+1 0 0 1 40 638 Tm (08 Jul) Tj
+1 0 0 1 110 638 Tm (GRABPAY RIDE) Tj
+1 0 0 1 360 638 Tm (12.50) Tj
+1 0 0 1 510 638 Tm (10,902.30) Tj
+1 0 0 1 40 616 Tm (12 Jul) Tj
+1 0 0 1 110 616 Tm (NETFLIX SUBSCRIPTION) Tj
+1 0 0 1 360 616 Tm (19.98) Tj
+1 0 0 1 510 616 Tm (10,882.32) Tj
+1 0 0 1 40 594 Tm (15 Jul) Tj
+1 0 0 1 110 594 Tm (FAST TRANSFER TO) Tj
+1 0 0 1 360 594 Tm (300.00) Tj
+1 0 0 1 510 594 Tm (10,582.32) Tj
+1 0 0 1 110 572 Tm (JANE TAN) Tj
+1 0 0 1 40 550 Tm (20 Jul) Tj
+1 0 0 1 110 550 Tm (REFUND LAZADA) Tj
+1 0 0 1 440 550 Tm (40.00) Tj
+1 0 0 1 510 550 Tm (10,622.32) Tj
+1 0 0 1 40 528 Tm (31 Jul) Tj
+1 0 0 1 110 528 Tm (BALANCE C/F) Tj
+1 0 0 1 510 528 Tm (10,622.32) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001705 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1775
+%%EOF

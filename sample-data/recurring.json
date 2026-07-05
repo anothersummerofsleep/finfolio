@@ -1,0 +1,33 @@
+[
+  {
+    "id": "phone-installment",
+    "name": "Phone installment",
+    "type": "installment",
+    "amount": 74.5,
+    "frequency": "monthly",
+    "accountId": "beta-card",
+    "categoryId": "shopping",
+    "startDate": "2025-09-01",
+    "installmentsTotal": 24
+  },
+  {
+    "id": "gym-giro",
+    "name": "Gym membership GIRO",
+    "type": "giro",
+    "amount": 89,
+    "frequency": "monthly",
+    "accountId": "alpha-bank",
+    "categoryId": "entertainment",
+    "startDate": "2025-01-01"
+  },
+  {
+    "id": "life-insurance-giro",
+    "name": "Term life GIRO",
+    "type": "giro",
+    "amount": 1980,
+    "frequency": "yearly",
+    "accountId": "alpha-bank",
+    "categoryId": "insurance",
+    "startDate": "2025-03-01"
+  }
+]

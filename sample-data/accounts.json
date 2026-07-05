@@ -1,0 +1,17 @@
+[
+  {
+    "id": "alpha-bank",
+    "name": "Alpha Bank",
+    "kind": "bank"
+  },
+  {
+    "id": "beta-card",
+    "name": "Beta Rewards Card",
+    "kind": "credit-card"
+  },
+  {
+    "id": "gamma-card",
+    "name": "Gamma Cashback Card",
+    "kind": "credit-card"
+  }
+]

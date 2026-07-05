@@ -1,0 +1,14 @@
+[
+  {
+    "pattern": "fairprice",
+    "categoryId": "groceries"
+  },
+  {
+    "pattern": "grab",
+    "categoryId": "transport"
+  },
+  {
+    "pattern": "netflix",
+    "categoryId": "subscriptions"
+  }
+]

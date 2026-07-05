@@ -1,0 +1,1535 @@
+[
+  {
+    "month": "2025-01",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 509.24,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 218.07,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 220.69,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 474.07,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 62.55,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 378.57,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 298.92,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 64.27,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 116.68,
+    "source": "manual"
+  },
+  {
+    "month": "2025-01",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 571.11,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 159.16,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 190.93,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 490.04,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 77.91,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 484.85,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 105.2,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 61.82,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 160.48,
+    "source": "manual"
+  },
+  {
+    "month": "2025-02",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 422.56,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 154.83,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 182.39,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 474.6,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 87.22,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 459.56,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 112.46,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 59.97,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 161.12,
+    "source": "manual"
+  },
+  {
+    "month": "2025-03",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 482.45,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 174.59,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 180.86,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 468.02,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 65.43,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 480.47,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 180.49,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 62.9,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 85.14,
+    "source": "manual"
+  },
+  {
+    "month": "2025-04",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 594.61,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 180.86,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 191.36,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 479.43,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 40.13,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 316.03,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 309.88,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 63.12,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 143.17,
+    "source": "manual"
+  },
+  {
+    "month": "2025-05",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 612.3,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 172.56,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 237.86,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 472.23,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 22.65,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 297.49,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 216.46,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 61.89,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 133.43,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-06",
+    "categoryId": "travel",
+    "accountId": "beta-card",
+    "amount": 1994.48,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 610.45,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 156.05,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 223.01,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 474.3,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 61.95,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 551.4,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 141.62,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 65.07,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 127.54,
+    "source": "manual"
+  },
+  {
+    "month": "2025-07",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 536.32,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 162.39,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 216.06,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 481.32,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 82.02,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 385.49,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 244.33,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 64.13,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 143.41,
+    "source": "manual"
+  },
+  {
+    "month": "2025-08",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 505.83,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 184.88,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 197.14,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 470.44,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 78.89,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 391.19,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 349.21,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 64.51,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 71.24,
+    "source": "manual"
+  },
+  {
+    "month": "2025-09",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 443.04,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 231.06,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 189.74,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 500.26,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 79.17,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 362.8,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 232.81,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 59.91,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 138.56,
+    "source": "manual"
+  },
+  {
+    "month": "2025-10",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 546.81,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 221.78,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 199.06,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 504.33,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 49.72,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 333.89,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 373.48,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 61.19,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 61.14,
+    "source": "manual"
+  },
+  {
+    "month": "2025-11",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "other-income",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 598.19,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 224.08,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 191.67,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 495.09,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 58.97,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 350.47,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 118.81,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 63.27,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 145,
+    "source": "manual"
+  },
+  {
+    "month": "2025-12",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 486.01,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 129.14,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 192.42,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 514.18,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 66.95,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 603.9,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 155.13,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 59.96,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 127.32,
+    "source": "manual"
+  },
+  {
+    "month": "2026-01",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 506.36,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 171.18,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 221.73,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 485.03,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 44.27,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 574.63,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 206.12,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 61.97,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 133.3,
+    "source": "manual"
+  },
+  {
+    "month": "2026-02",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 464.96,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 161.14,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 197.32,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 481.21,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 76.25,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 362.08,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 156.82,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 63.21,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 97.71,
+    "source": "manual"
+  },
+  {
+    "month": "2026-03",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 424.82,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 188.37,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 191.58,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 489.1,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 48.47,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 516.8,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 388.74,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 63.93,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 112.72,
+    "source": "manual"
+  },
+  {
+    "month": "2026-04",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 525.34,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 216.76,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 234.85,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 487.56,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 26.07,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 487.4,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 355.97,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 60.19,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 106.76,
+    "source": "manual"
+  },
+  {
+    "month": "2026-05",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "salary",
+    "accountId": "alpha-bank",
+    "amount": 6500,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "housing",
+    "accountId": "alpha-bank",
+    "amount": 1400,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "groceries",
+    "accountId": "gamma-card",
+    "amount": 518.34,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "transport",
+    "accountId": "beta-card",
+    "amount": 218.82,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "utilities",
+    "accountId": "alpha-bank",
+    "amount": 231.62,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "insurance",
+    "accountId": "alpha-bank",
+    "amount": 501.94,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "healthcare",
+    "accountId": null,
+    "amount": 17.14,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "dining",
+    "accountId": "beta-card",
+    "amount": 314.34,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "shopping",
+    "accountId": "beta-card",
+    "amount": 156.82,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "subscriptions",
+    "accountId": "gamma-card",
+    "amount": 62.04,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "entertainment",
+    "accountId": "beta-card",
+    "amount": 141.2,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "giving",
+    "accountId": null,
+    "amount": 100,
+    "source": "manual"
+  },
+  {
+    "month": "2026-06",
+    "categoryId": "travel",
+    "accountId": "beta-card",
+    "amount": 2871.8,
+    "source": "manual"
+  }
+]

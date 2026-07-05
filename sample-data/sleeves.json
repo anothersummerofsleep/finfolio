@@ -1,0 +1,37 @@
+[
+  {
+    "id": "cash",
+    "name": "Bank cash",
+    "class": "cash",
+    "liquid": true,
+    "fiEligible": false
+  },
+  {
+    "id": "brokerage",
+    "name": "Brokerage / robo",
+    "class": "equity",
+    "liquid": false,
+    "fiEligible": true
+  },
+  {
+    "id": "retirement",
+    "name": "Retirement accounts",
+    "class": "guaranteed",
+    "liquid": false,
+    "fiEligible": true
+  },
+  {
+    "id": "endowment",
+    "name": "Endowment / whole-life",
+    "class": "guaranteed",
+    "liquid": false,
+    "fiEligible": true
+  },
+  {
+    "id": "crypto",
+    "name": "Crypto",
+    "class": "crypto",
+    "liquid": false,
+    "fiEligible": true
+  }
+]

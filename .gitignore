@@ -1,0 +1,13 @@
+node_modules/
+
+# Live financial data — never committed. The app reads DATA_DIR (default ./data).
+data/
+.demo-data/
+*.bak
+*.tmp
+
+# Real bank statements are PII — never committed, even if dropped under sample-data/.
+# sample-data/ ships only fake generated statements (see scripts/generate-sample-data.js).
+sample-data/HSBC/
+sample-data/**/*_Statement_*.pdf
+sample-data/*_Statement_*.pdf

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "salary",
+    "name": "Salary",
+    "type": "income",
+    "group": null
+  },
+  {
+    "id": "other-income",
+    "name": "Other income",
+    "type": "income",
+    "group": null
+  },
+  {
+    "id": "housing",
+    "name": "Housing",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "groceries",
+    "name": "Groceries",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "transport",
+    "name": "Transport",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "utilities",
+    "name": "Utilities & telco",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "insurance",
+    "name": "Insurance",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "healthcare",
+    "name": "Healthcare",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "family",
+    "name": "Family support",
+    "type": "expense",
+    "group": "needs"
+  },
+  {
+    "id": "dining",
+    "name": "Dining out",
+    "type": "expense",
+    "group": "wants"
+  },
+  {
+    "id": "shopping",
+    "name": "Shopping",
+    "type": "expense",
+    "group": "wants"
+  },
+  {
+    "id": "subscriptions",
+    "name": "Subscriptions",
+    "type": "expense",
+    "group": "wants"
+  },
+  {
+    "id": "travel",
+    "name": "Travel",
+    "type": "expense",
+    "group": "wants"
+  },
+  {
+    "id": "entertainment",
+    "name": "Entertainment",
+    "type": "expense",
+    "group": "wants"
+  },
+  {
+    "id": "giving",
+    "name": "Giving / donations",
+    "type": "expense",
+    "group": "goals"
+  },
+  {
+    "id": "education",
+    "name": "Courses & education",
+    "type": "expense",
+    "group": "goals"
+  }
+]
