@@ -2,11 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createStore } from './lib/store.js';
 import { ensureSeed, SEEDS } from './lib/seed.js';
 import {
   parseCsv, applyMapping, suggestCategory,
-  aggregateTransactions, mergeImport, addRules
+  aggregateTransactions, mergeImport, addImportAggregates, addRules
 } from './lib/importer.js';
 import { extractPdfText, hasNoTextLayer } from './lib/pdf.js';
 import { extractPdfViaOcr } from './lib/ocr.js';
@@ -62,6 +63,40 @@ app.get('/api/import/browse', (req, res) => {
   res.json({ enabled: true, dir: STATEMENTS_DIR, files: listStatements(STATEMENTS_DIR) });
 });
 
+// Crops the band around one OCR'd transaction line out of its cached page
+// image, so the UI can show "here's exactly what I read" next to a row —
+// the fastest way to check a suspect amount/date against the source without
+// digging up the original statement. Cropped on demand (not pre-generated
+// per line) since most rows are never hovered over.
+app.get('/api/ocr-snippet/:cacheId/:page', async (req, res) => {
+  const { cacheId, page } = req.params;
+  if (!/^[a-f0-9]{24}$/.test(cacheId)) return res.status(400).json({ error: 'Invalid cache id' });
+  const pageNum = Number(page);
+  if (!Number.isInteger(pageNum) || pageNum < 1) return res.status(400).json({ error: 'Invalid page' });
+  const yStart = Number(req.query.yStart);
+  const yEnd = Number(req.query.yEnd ?? yStart);
+  if (!Number.isFinite(yStart)) return res.status(400).json({ error: 'yStart is required' });
+
+  const imgPath = path.join(DATA_DIR, '.ocr-image-cache', cacheId, `page-${pageNum}.png`);
+  if (!fs.existsSync(imgPath)) {
+    return res.status(404).json({ error: 'No cached image for this statement — try re-importing it.' });
+  }
+  try {
+    const img = await loadImage(imgPath);
+    const PAD = 45; // vertical breathing room around the line so context (the row above/below) is visible
+    const top = Math.max(0, Math.min(yStart, yEnd) - PAD);
+    const bottom = Math.min(img.height, Math.max(yStart, yEnd) + PAD);
+    const height = Math.max(1, bottom - top);
+    const canvas = createCanvas(img.width, height);
+    canvas.getContext('2d').drawImage(img, 0, top, img.width, height, 0, 0, img.width, height);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'private, max-age=86400');
+    res.send(canvas.toBuffer('image/png'));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Attach a suggested category to each parsed transaction (shared by CSV + PDF).
 function decorateWithSuggestions(transactions) {
   const rules = store.read('import-rules', []);
@@ -112,6 +147,7 @@ app.post('/api/import', async (req, res, next) => {
       let extracted = await extractPdfText(bytes);
       let ocrUsed = false;
       let meanConfidence = null;
+      let imageCacheId = null;
 
       // Image-only statement (no text layer, e.g. HSBC's OpenText output). Offer
       // OCR; only run it when the client opts in (it's slow — seconds per page).
@@ -126,10 +162,25 @@ app.post('/api/import', async (req, res, next) => {
         }
         extracted = await extractPdfViaOcr(bytes, {
           cachePath: path.join(DATA_DIR, '.tesseract-cache'),
-          onProgress: (p, n) => console.log(`OCR ${filename}: page ${p}/${n}`)
+          onProgress: (p, n) => console.log(`OCR ${filename}: page ${p}/${n}`),
+          // These statements put a wide account-summary sidebar beside the
+          // transaction table; cropping it out before OCR avoids Tesseract
+          // merging the two into one line (see lib/ocr.js). Tried also
+          // bumping scale to 4 (more headroom since there's less to render),
+          // but it introduced a worse failure: Tesseract occasionally
+          // hallucinating an extra digit into an otherwise-clean amount
+          // ("1,556.86" read as "1,5656.86") — wrong in a way nothing here
+          // can detect, unlike a missing decimal point or an empty field.
+          // Cropping alone, at the original scale, fixed every case we found
+          // without introducing that risk.
+          cropRight: 0.7,
+          // Cache the rendered page images so a transaction can show "here's
+          // exactly the line I was read from" — see the /api/ocr-snippet route.
+          imageCacheDir: path.join(DATA_DIR, '.ocr-image-cache')
         });
         ocrUsed = true;
         meanConfidence = extracted.meanConfidence;
+        imageCacheId = extracted.imageCacheId;
         if (hasNoTextLayer(extracted)) {
           return res.status(422).json({ error: 'OCR found no readable text in this PDF.' });
         }
@@ -157,7 +208,7 @@ app.post('/api/import', async (req, res, next) => {
       return res.json({
         transactions: decorateWithSuggestions(transactions),
         errors, meta, profileUsed: profile.id, presetUsed: !profileId,
-        ocrUsed, meanConfidence
+        ocrUsed, meanConfidence, imageCacheId
       });
     }
 
@@ -201,6 +252,51 @@ app.post('/api/import/confirm', (req, res) => {
     ok: true,
     entriesAdded: aggregates.length,
     monthsUpdated: [...new Set(aggregates.map((a) => a.month))].sort()
+  });
+});
+
+// Save progress on the review queue: items still missing a category are
+// written back for next time (edits kept); "skip" items are discarded;
+// categorized items are aggregated and added to monthly.json — additively
+// (addImportAggregates), not via mergeImport's replace-the-whole-month
+// semantics, since these are extra categories layered onto a month whose
+// obvious transactions were very likely already imported separately.
+app.post('/api/review-queue/commit', (req, res) => {
+  const { items, newRules } = req.body || {};
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'items array is required' });
+
+  const remaining = [];
+  const byAccount = new Map(); // accountId -> transactions[]
+  for (const item of items) {
+    if (!item.categoryId) { remaining.push(item); continue; }
+    if (item.categoryId === 'skip') continue; // decided it's not a real expense — discard
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(item.date) || !Number.isFinite(Number(item.amount))) {
+      return res.status(400).json({ error: `Fix date/amount before saving: ${item.description || item.id}` });
+    }
+    const list = byAccount.get(item.accountId) || [];
+    list.push({ month: item.date.slice(0, 7), categoryId: item.categoryId, amount: Number(item.amount) });
+    byAccount.set(item.accountId, list);
+  }
+
+  let monthly = store.read('monthly', []);
+  let entriesAdded = 0;
+  const monthsUpdated = new Set();
+  for (const [accountId, transactions] of byAccount) {
+    const aggregates = aggregateTransactions(transactions);
+    monthly = addImportAggregates(monthly, accountId, aggregates);
+    entriesAdded += aggregates.length;
+    for (const a of aggregates) monthsUpdated.add(a.month);
+  }
+  store.write('monthly', monthly);
+  store.write('review-queue', remaining);
+  if (newRules?.length) {
+    store.write('import-rules', addRules(store.read('import-rules', []), newRules));
+  }
+  res.json({
+    ok: true,
+    entriesAdded,
+    monthsUpdated: [...monthsUpdated].sort(),
+    remaining: remaining.length
   });
 });
 

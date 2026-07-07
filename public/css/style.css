@@ -142,6 +142,28 @@ label { font-size: 0.85rem; color: var(--muted); display: inline-flex; align-ite
   border-radius: var(--radius);
   z-index: 20;
 }
+
+.ocr-clip {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 6px;
+}
+.ocr-clip:hover { background: var(--panel-2); color: var(--text); }
+.ocr-popup {
+  position: fixed;
+  z-index: 30;
+  max-width: min(90vw, 900px);
+  border: 1px solid var(--accent-2);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: #fff;
+  pointer-events: none;
+}
+.ocr-popup[hidden] { display: none; }
 #toast.error { border-color: var(--danger); }
 
 .chart-box { position: relative; height: 260px; }

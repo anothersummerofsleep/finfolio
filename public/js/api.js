@@ -22,7 +22,7 @@ export const api = {
 
 const NAMES = [
   'monthly', 'snapshots', 'categories', 'accounts',
-  'recurring', 'sleeves', 'settings', 'import-rules', 'import-presets'
+  'recurring', 'sleeves', 'settings', 'import-rules', 'import-presets', 'review-queue'
 ];
 
 export async function loadAll() {

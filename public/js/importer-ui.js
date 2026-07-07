@@ -1,4 +1,4 @@
-import { el, money, toast, monthLabel } from './ui.js';
+import { el, money, toast, monthLabel, ocrClip } from './ui.js';
 import { api } from './api.js';
 
 // Import flow: pick account + file → (build column mapping if first time) →
@@ -159,6 +159,7 @@ function toReview(flow, result) {
   flow.profileUsed = result.profileUsed;
   flow.ocrUsed = result.ocrUsed || flow.ocrUsed;
   flow.meanConfidence = result.meanConfidence;
+  flow.imageCacheId = result.imageCacheId || flow.imageCacheId;
 }
 
 // Image-only PDF: offer OCR (opt-in, since it's slow). Re-post with ocr:true.
@@ -379,7 +380,7 @@ function reviewPanel(state) {
     });
     return el('tr', {},
       el('td', {}, dateInput),
-      el('td', {}, descInput),
+      el('td', {}, descInput, ocrClip(flow.imageCacheId, txn._ocr)),
       el('td', { class: 'num' }, amtInput),
       el('td', {}, cat),
       el('td', {}, ruleBox));
