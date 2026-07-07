@@ -120,3 +120,92 @@ test('generic: leading date + trailing amount, description in between', () => {
     date: '2026-01-15', month: '2026-01', description: 'ELECTRICITY BILL', amount: 88
   });
 });
+
+// ---- Trust (Trust Bank Singapore) -----------------------------------------
+// Trust's rows span several lines (merchant name above/below the amount line,
+// plus an FX-rate line), so these fixtures carry real y-positions. Columns:
+//   [Transaction date ~72] Posting date ~141 | Description ~210 | FCY ~380 | SGD ~457
+// A credit prints with a leading "+"; balance-summary rows are not transactions.
+const at = (y, ...words) => ({
+  y,
+  text: words.map(([, s]) => s).join(' ').replace(/\s+/g, ' ').trim(),
+  words: words.map(([x, str]) => ({ x, str }))
+});
+const TRUST_HEADER = at(680, [141, 'Posting date'], [210, 'Description'],
+  [380, 'Amount in FCY'], [457, 'Amount in SGD']);
+
+test('detect: a Trust statement is recognized', () => {
+  assert.equal(detectProfile('Trust Bank Singapore Limited\nCredit card statement').id, 'trust');
+  assert.ok(listProfiles().some((p) => p.id === 'trust'));
+});
+
+test('Trust: purchase — merchant name (above) + inline detail, FX line ignored, SGD amount', () => {
+  const doc = page(
+    at(700, [407, '24 Feb 2026 - 26 Mar 2026']),
+    TRUST_HEADER,
+    at(478, [210, 'SEKAINOYAMACHAN']),
+    at(466, [72, '19 Feb'], [141, '22 Feb'], [210, 'AKIHABARAAichi JP'],
+      [387, '10,296.00'], [420, 'JPY'], [501, '85.32']),
+    at(454, [214, '1 JPY = 0.0083 SGD'])
+  );
+  const { transactions, errors } = getProfile('trust').parse(doc);
+  assert.equal(errors.length, 0);
+  assert.equal(transactions.length, 1);
+  assert.deepEqual(transactions[0], {
+    date: '2026-02-19', month: '2026-02',
+    description: 'SEKAINOYAMACHAN AKIHABARAAichi JP', amount: 85.32
+  });
+});
+
+test('Trust: a "+" credit is money in (negative), stitched across lines', () => {
+  const doc = page(
+    at(700, [407, '24 Feb 2026 - 26 Mar 2026']),
+    TRUST_HEADER,
+    at(576, [210, 'Credit Payment from Trust savings']),
+    at(570, [72, '03 Mar'], [141, '03 Mar'], [479, '+14,047.40']),
+    at(564, [210, 'account']),
+    at(99, [72, '25 Mar'], [141, '25 Mar'], [210, 'Cashback'], [500, '+4.20'])
+  );
+  const { transactions } = getProfile('trust').parse(doc);
+  const credit = transactions.find((t) => /Credit Payment/.test(t.description));
+  assert.equal(credit.amount, -14047.40, 'repayment is money in');
+  assert.equal(credit.description, 'Credit Payment from Trust savings account');
+  assert.equal(transactions.find((t) => t.description === 'Cashback').amount, -4.20);
+});
+
+test('Trust: "Previous balance" and "Total outstanding balance" rows are not transactions', () => {
+  const doc = page(
+    at(700, [407, '24 Feb 2026 - 26 Mar 2026']),
+    TRUST_HEADER,
+    at(638, [72, '24 Feb'], [141, '24 Feb'], [210, 'Previous balance'], [485, '769.52']),
+    at(500, [72, '25 Feb'], [141, '25 Feb'], [210, 'KFC'], [502, '12.30']),
+    at(74, [72, '26 Mar'], [141, '26 Mar'], [210, 'Total outstanding balance'], [496, '5,178.43'])
+  );
+  const { transactions } = getProfile('trust').parse(doc);
+  assert.equal(transactions.length, 1, 'only the real KFC purchase survives');
+  assert.equal(transactions[0].description, 'KFC');
+  assert.equal(transactions[0].amount, 12.30);
+});
+
+test('Trust: single-date (early) layout — Posting date only, description at its own x', () => {
+  // Header/period place Description at x~141 (no Transaction-date column).
+  const header = at(680, [72, 'Posting date'], [141, 'Description'],
+    [380, 'Amount in FCY'], [457, 'Amount in SGD']);
+  const doc = page(
+    at(700, [407, '26 Jun 2025 - 26 Jul 2025']),
+    header,
+    at(654, [72, '26 Jun'], [141, 'Previous balance'], [499, '+5.00']),
+    at(629, [141, 'Novotel Century HK 25076609 HK']),
+    at(623, [72, '13 Jul'], [388, '6,678.02'], [410, 'HKD'], [490, '1,091.34']),
+    at(617, [145, '1 HKD = 0.1634 SGD']),
+    at(592, [72, '18 Jul'], [141, 'KFC'], [502, '12.30'])
+  );
+  const { transactions, errors } = getProfile('trust').parse(doc);
+  assert.equal(errors.length, 0);
+  assert.equal(transactions.length, 2, 'Previous balance skipped; two real rows');
+  assert.deepEqual(transactions[0], {
+    date: '2025-07-13', month: '2025-07',
+    description: 'Novotel Century HK 25076609 HK', amount: 1091.34
+  });
+  assert.equal(transactions[1].description, 'KFC');
+});
