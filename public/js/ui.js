@@ -53,6 +53,39 @@ export function monthLabel(ym) {
 
 export const CHART_COLORS = ['#4cc38a', '#58a6ff', '#e5a50a', '#e5534b', '#b083f0', '#f78166', '#79c0ff', '#7ee787', '#ffa657', '#d2a8ff', '#a5d6ff', '#ffab70'];
 
+// A paperclip button that, on hover, shows a crop of the exact OCR'd source
+// line — the fastest way to check a suspect amount/date against the actual
+// statement. Only rendered when a transaction carries an _ocr reference
+// (OCR-parsed PDFs only; CSV and text-layer PDFs have nothing to show).
+// One floating <img> is reused across every call so hovering quickly between
+// rows doesn't pile up orphaned popups.
+let sharedPopup = null;
+function popup() {
+  if (!sharedPopup) {
+    sharedPopup = el('img', { class: 'ocr-popup' });
+    document.body.append(sharedPopup);
+  }
+  return sharedPopup;
+}
+
+export function ocrClip(imageCacheId, ocrRef) {
+  if (!imageCacheId || !ocrRef) return null;
+  const url = `/api/ocr-snippet/${imageCacheId}/${ocrRef.page}?yStart=${ocrRef.yStart}&yEnd=${ocrRef.yEnd}`;
+  const place = (ev) => {
+    const p = popup();
+    const margin = 16;
+    const maxLeft = window.innerWidth - p.offsetWidth - margin;
+    p.style.left = `${Math.max(margin, Math.min(ev.clientX + margin, maxLeft))}px`;
+    p.style.top = `${Math.min(ev.clientY + margin, window.innerHeight - margin)}px`;
+  };
+  return el('button', {
+    type: 'button', class: 'ocr-clip', title: 'Hover to see the source line',
+    onmouseenter: (ev) => { const p = popup(); p.src = url; p.hidden = false; place(ev); },
+    onmousemove: place,
+    onmouseleave: () => { popup().hidden = true; }
+  }, '📎');
+}
+
 export function chartDefaults() {
   if (!window.Chart) return;
   Chart.defaults.color = '#8b98a5';

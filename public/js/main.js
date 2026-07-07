@@ -5,13 +5,15 @@ import * as monthly from './monthly.js';
 import * as snapshots from './snapshots.js';
 import * as registries from './registries.js';
 import * as importerUi from './importer-ui.js';
+import * as reviewQueue from './review-queue.js';
 
 const TABS = {
   dashboard,
   monthly,
   snapshots,
   registries,
-  import: importerUi
+  import: importerUi,
+  reviewQueue
 };
 
 const state = {

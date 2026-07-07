@@ -70,7 +70,8 @@ STATEMENTS_DIR=/path/to/your/statements-folder npm start
 Data entry is designed around the reality that nobody logs transactions daily:
 
 - **Monthly granularity.** One number per category per month, entered in an editable grid built for backfilling years quickly. A cell can be split across accounts when you care; left untagged when you don't.
-- **Statement import.** Upload a bank/card **CSV** (map columns once per account), a **PDF e-statement** (a per-bank profile locates the transaction table), or an **image-only PDF** (some banks render statements as page images with no text layer — read on-device with OCR). Then review with auto-suggested categories and merge. The **review screen is fully editable** — date, description, and amount — which matters for OCR, where a digit can be misread. Categorization rules grow as you correct suggestions. Re-importing a month replaces that account's imported numbers and never touches manual entries. PDF profiles ship bank by bank; an unrecognized bank falls back to a generic profile you pick.
+- **Statement import.** Upload a bank/card **CSV** (map columns once per account), a **PDF e-statement** (a per-bank profile locates the transaction table), or an **image-only PDF** (some banks render statements as page images with no text layer — read on-device with OCR). Then review with auto-suggested categories and merge. The **review screen is fully editable** — date, description, and amount — which matters for OCR, where a digit can be misread. When a row came from OCR, a **📎 shows a crop of the exact source line** on hover, so a suspect amount can be checked against the actual statement without reopening the PDF. Categorization rules grow as you correct suggestions. Re-importing a month replaces that account's imported numbers and never touches manual entries. PDF profiles ship bank by bank; an unrecognized bank falls back to a generic profile you pick.
+- **Review queue.** Transactions parsed cleanly but left uncategorized on purpose (a flight installment, a one-off foreign merchant, a fee) don't block an import — they land on their own **Review** tab, kept in `review-queue.json`, to be categorized whenever. Committing them **tops up** the affected month additively, so it never disturbs categories already recorded for that month.
 - **Statements folder (optional).** Point `STATEMENTS_DIR` at a standing local folder of downloaded statements and the Import tab lists them (newest first) with a one-click Import — no browser file picker needed. finfolio only ever reads from this folder.
 - **Apply recurring.** One click drops the month's expected GIRO/installment amounts into the grid — explicit, never automatic.
 
@@ -86,6 +87,7 @@ lib/pdf-profiles.js  per-bank statement parsers (one bank profile + generic fall
 lib/statements.js    lists/resolves files under STATEMENTS_DIR (read-only, path-safe)
 lib/seed.js          first-run defaults (categories, sleeves, settings)
 public/js/calc.js    pure calculation module — shared by the UI and the tests
+public/js/review-queue.js  the Review tab: deferred/uncategorized transactions
 public/js/*.js       vanilla ES modules, one per tab; Chart.js for charts
 test/                node:test suites for calc, importer, store, pdf, ocr, statements
 ```
@@ -101,7 +103,8 @@ Design choices worth noting:
 - **No build step, no framework.** Vanilla ES modules; the whole app is readable in one sitting.
 - **Pure calculation core.** Everything numeric (net worth series, runway, FI math, installment schedules, import merging) lives in dependency-free modules tested with `node:test` — the UI is just rendering.
 - **OCR reuses the text path.** Rendered-then-OCR'd pages are turned into the *same* positioned-line shape as a text PDF, so the existing bank profiles parse them with no OCR-specific code. Image-only import is "render → OCR → existing pipeline."
-- **Import safety.** Parsing errors are reported, not silently dropped; uncategorized rows are never imported; the review screen is editable so OCR misreads are corrected before merge; card-bill payments can be marked "skip" to avoid double counting.
+- **OCR accuracy is fixed at the source, not patched after.** These statements sit an account-summary sidebar next to the transaction table, and Tesseract's column detection tends to merge the two — bleeding sidebar numbers into a transaction's amount. finfolio **crops the sidebar off before OCR** rather than trying to strip it back out afterward. The parsers are also OCR-tolerant where it's safe (a `CR` marker glued straight onto a number, a day glued to a month like `08Sep`) — but never in ways that could mask a misread. For the cases OCR can still get wrong, the **📎 source-line snippet** puts the actual pixels one hover away: rendered page images are cached under `DATA_DIR/.ocr-image-cache/` and cropped on demand by page + line position, so a transaction only needs to carry a tiny reference, not the image.
+- **Import safety.** Parsing errors are reported, not silently dropped; uncategorized rows are never imported (they go to the Review queue instead); the review screen is editable so OCR misreads are corrected before merge; card-bill payments can be marked "skip" to avoid double counting.
 - **Statements folder is read-only and path-safe.** `lib/statements.js` only lists supported extensions and resolves a picked path with a traversal guard (`../` and absolute paths are rejected) — the server can't be tricked into reading outside `STATEMENTS_DIR`, and finfolio never writes to or deletes from that folder.
 
 ```bash

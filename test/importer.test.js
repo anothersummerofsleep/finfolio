@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   parseCsv, parseAmount, parseDate, applyMapping,
-  suggestCategory, aggregateTransactions, mergeImport, addRules
+  suggestCategory, aggregateTransactions, mergeImport, addImportAggregates, addRules
 } from '../lib/importer.js';
 
 test('parseCsv handles quotes, embedded commas, CRLF', () => {
@@ -108,6 +108,24 @@ test('mergeImport replaces prior imports for same account+month, keeps manual', 
   assert.ok(merged.some((e) => e.source === 'manual' && e.amount === 1500));
   assert.ok(merged.some((e) => e.accountId === 'dbs'));
   assert.ok(merged.some((e) => e.month === '2026-05'));
+});
+
+test('addImportAggregates tops up an existing category instead of replacing the month', () => {
+  const monthly = [
+    { month: '2026-06', categoryId: 'dining', accountId: 'amex', amount: 100, source: 'import' },
+    { month: '2026-06', categoryId: 'shopping', accountId: 'amex', amount: 50, source: 'import' },
+    { month: '2026-06', categoryId: 'rent', accountId: null, amount: 1500, source: 'manual' }
+  ];
+  const merged = addImportAggregates(monthly, 'amex', [
+    { month: '2026-06', categoryId: 'dining', amount: 25 }, // tops up existing dining
+    { month: '2026-06', categoryId: 'travel', amount: 300 } // new category for the month
+  ]);
+  assert.equal(merged.length, 4, 'shopping and manual rows untouched, travel added');
+  const dining = merged.find((e) => e.accountId === 'amex' && e.categoryId === 'dining');
+  assert.equal(dining.amount, 125, 'topped up, not replaced');
+  assert.ok(merged.some((e) => e.categoryId === 'shopping' && e.amount === 50), 'other category untouched');
+  assert.ok(merged.some((e) => e.categoryId === 'travel' && e.amount === 300), 'new category added');
+  assert.ok(merged.some((e) => e.source === 'manual'));
 });
 
 test('addRules dedupes by pattern+category', () => {
