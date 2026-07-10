@@ -230,3 +230,129 @@ test('Trust: single-date (early) layout — Posting date only, description at it
   });
   assert.equal(transactions[1].description, 'KFC');
 });
+
+// ---- DBS / POSB credit card -----------------------------------------------
+// Layout: DATE ~54 | DESCRIPTION ~95 | AMOUNT (S$) ~515, with a "CR" token to
+// the right for credits. Dates are year-less ("22 MAY"); the year comes from
+// the STATEMENT DATE header. One statement bundles several cards. Non-txn
+// tables (instalment/points summaries) sit outside the DATE/DESCRIPTION/AMOUNT
+// table or after "GRAND TOTAL FOR ALL CARD ACCOUNTS".
+const DBS_CARD_HEADER = line([57, 'DATE'], [124, 'DESCRIPTION'], [502, 'AMOUNT (S$)']);
+const dbsCardStmt = (stmtDate, ...rows) => page(
+  line([82, 'STATEMENT DATE'], [335, 'MINIMUM PAYMENT'], [461, 'PAYMENT DUE DATE']),
+  line([95, stmtDate], [359, '$100.00'], [480, '07 Jul 2026']),
+  DBS_CARD_HEADER,
+  ...rows
+);
+
+test('detect: a DBS credit-card statement is recognized', () => {
+  const t = 'Credit Cards\nStatement of Account\nDBS ALTITUDE VISA SIGNATURE CARD NO.: 4119';
+  assert.equal(detectProfile(t).id, 'dbs-card');
+  assert.ok(listProfiles().some((p) => p.id === 'dbs-card'));
+});
+
+test('DBS card: charge is money out (+), a CR row is a credit (money in, -)', () => {
+  const doc = dbsCardStmt('12 Jun 2026',
+    line([96, 'PREVIOUS BALANCE'], [513, '3,154.38']),
+    line([54, '22 MAY'], [95, 'BILL PAYMENT - DBS INTERNET/WIRELESS'], [514, '2,083.86'], [550, 'CR']),
+    line([54, '10 MAY'], [95, 'FWD SINGAPORE - IFA LI'], [521, '178.21']),
+    line([54, '04 JUN'], [95, '7-ELEVEN - ESPLANADE M'], [529, '8.30'])
+  );
+  const { transactions, errors } = getProfile('dbs-card').parse(doc);
+  assert.equal(errors.length, 0);
+  assert.equal(transactions.length, 3, 'PREVIOUS BALANCE (no date) is skipped');
+  const byDesc = Object.fromEntries(transactions.map((t) => [t.description, t]));
+  assert.equal(byDesc['BILL PAYMENT - DBS INTERNET/WIRELESS'].amount, -2083.86, 'CR = money in');
+  assert.deepEqual(byDesc['FWD SINGAPORE - IFA LI'], {
+    date: '2026-05-10', month: '2026-05', description: 'FWD SINGAPORE - IFA LI', amount: 178.21
+  });
+  assert.equal(byDesc['7-ELEVEN - ESPLANADE M'].date, '2026-06-04', 'year from STATEMENT DATE');
+});
+
+test('DBS card: a Dec row on a January statement rolls back to the previous year', () => {
+  const doc = dbsCardStmt('08 Jan 2026',
+    line([54, '28 DEC'], [95, 'AMAZON'], [521, '40.00']),
+    line([54, '03 JAN'], [95, 'GRAB'], [521, '12.00'])
+  );
+  const { transactions } = getProfile('dbs-card').parse(doc);
+  const byDesc = Object.fromEntries(transactions.map((t) => [t.description, t]));
+  assert.equal(byDesc['AMAZON'].date, '2025-12-28', 'Dec after Jan statement = previous year');
+  assert.equal(byDesc['GRAB'].date, '2026-01-03');
+});
+
+test('DBS card: instalment postings kept; summary tables and sub-totals excluded', () => {
+  const doc = dbsCardStmt('12 Jun 2026',
+    line([54, '12 JUN'], [95, '008MY PREFERRED PAYMENT PLAN03 (01)'], [522, '356.84']),
+    line([413, 'SUB-TOTAL:'], [522, '103.38']),
+    line([430, 'TOTAL:'], [515, '1,173.90']),
+    // Instalment-plan summary row: begins with a plan code, not a date.
+    line([57, '008MY PREFERRED PAYMENT PLAN03'], [221, '$1,070.52'], [312, '3'], [488, '$713.68']),
+    line([287, 'GRAND TOTAL FOR ALL CARD ACCOUNTS:'], [515, '1,962.71']),
+    // DBS POINTS SUMMARY row after the grand total — must never be reached.
+    line([57, '4119 1100 9419 6984'], [163, '32,509'], [261, '335'], [431, '32,152'])
+  );
+  const { transactions, errors } = getProfile('dbs-card').parse(doc);
+  assert.equal(errors.length, 0);
+  assert.equal(transactions.length, 1, 'only the dated instalment posting is a transaction');
+  assert.equal(transactions[0].description, '008MY PREFERRED PAYMENT PLAN03 (01)');
+  assert.equal(transactions[0].amount, 356.84);
+});
+
+// ---- DBS / POSB consolidated bank statement -------------------------------
+// Cash-table columns: Date ~45 | Description ~113 | Withdrawal(-) ~338 (values
+// land ~360) | Deposit(+) ~430 (values ~445) | Balance ~515. Only cash accounts
+// (Multiplier / POSB) are collected; CPF / SRS / Fund tables are skipped.
+const DBS_BANK_HEADER2 = line([45, 'Date'], [113, 'Description'],
+  [338, 'Withdrawal (-)'], [430, 'Deposit (+)'], [515, 'Balance']);
+
+test('detect: a DBS/POSB consolidated bank statement is recognized', () => {
+  const t = 'DBS Consolidated Statement\nTransaction Details\nDBS Multiplier Account\nWithdrawal (-)';
+  assert.equal(detectProfile(t).id, 'dbs-bank');
+  assert.ok(listProfiles().some((p) => p.id === 'dbs-bank'));
+});
+
+test('DBS bank: withdrawal is money out (+), deposit money in (-); CPF table excluded', () => {
+  const doc = page(
+    line([34, 'Transaction Details'], [253, 'as at 30 Jun 2026']),
+    line([45, 'DBS Multiplier Account'], [441, 'Account No. 271-053117-5']),
+    DBS_BANK_HEADER2,
+    line([113, 'Balance Brought Forward'], [491, 'SGD 1,210.68']),
+    line([45, '03/06/2026'], [113, 'Advice Funds Transfer'], [367, '200.00'], [513, '1,010.68']),
+    line([113, 'FT260603MB53244511']),               // reference — dropped
+    line([113, 'VALUE DATE : 03/06/2026']),           // reference — dropped
+    line([45, '30/06/2026'], [113, 'Interest Earned'], [456, '0.06'], [513, '2,138.00']),
+    line([113, 'Total Balance Carried Forward in SGD:'], [360, '5,030.00'], [439, '5,957.32'], [513, '2,138.00']),
+    // CPF Investment Account — an investment table, must be excluded wholesale.
+    line([45, 'CPF Investment Account'], [423, 'Account No. 003-252413-6-220']),
+    line([45, 'Date'], [113, 'Description'], [257, 'Contract No.'], [338, 'Withdrawal (-)'], [430, 'Deposit (+)'], [494, 'Balance']),
+    line([45, '16/06/2026'], [97, 'PLACE FUND MGT'], [360, '2,050.00'])
+  );
+  const { transactions, errors } = getProfile('dbs-bank').parse(doc);
+  assert.equal(errors.length, 0);
+  assert.equal(transactions.length, 2, 'only cash rows; brought/carried-forward and CPF excluded');
+  const byDesc = Object.fromEntries(transactions.map((t) => [t.description, t]));
+  assert.equal(byDesc['Advice Funds Transfer'].amount, 200, 'withdrawal = money out (+)');
+  assert.equal(byDesc['Advice Funds Transfer'].date, '2026-06-03');
+  assert.equal(byDesc['Interest Earned'].amount, -0.06, 'deposit = money in (-)');
+  assert.ok(!transactions.some((t) => /FUND MGT/.test(t.description)), 'CPF row excluded');
+});
+
+test('DBS bank: payee continuation stitched, reference lines dropped; card-payment row survives for review', () => {
+  const doc = page(
+    line([34, 'Transaction Details']),
+    line([45, 'DBS Multiplier Account'], [441, 'Account No. 271-053117-5']),
+    DBS_BANK_HEADER2,
+    line([45, '07/06/2026'], [113, 'Advice Bill Payment'], [360, '1,795.00'], [513, '4,172.94']),
+    line([113, 'AMEX-376201895601003 : I-BANK']),    // has digits → dropped
+    line([113, 'CREDIT CARD PAYMENT']),               // words only → stitched
+    line([45, '10/06/2026'], [113, 'GIRO Payments / Collections via GIRO'], [360, '1,000.00'], [513, '3,172.94']),
+    line([113, 'FWD SINGAPORE PTE. LTD.'])            // payee → stitched
+  );
+  const { transactions } = getProfile('dbs-bank').parse(doc);
+  assert.equal(transactions.length, 2);
+  const pay = transactions.find((t) => /Bill Payment/.test(t.description));
+  assert.equal(pay.amount, 1795, 'card repayment parsed as money out (categorised as transfer downstream)');
+  assert.equal(pay.description, 'Advice Bill Payment CREDIT CARD PAYMENT', 'payee stitched, reference dropped');
+  const giro = transactions.find((t) => /GIRO/.test(t.description));
+  assert.equal(giro.description, 'GIRO Payments / Collections via GIRO FWD SINGAPORE PTE. LTD.');
+});
