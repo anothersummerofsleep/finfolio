@@ -24,7 +24,8 @@ function categoriesPanel(state) {
   const nameInput = el('input', { placeholder: 'New category name' });
   const typeSelect = el('select', {},
     el('option', { value: 'expense' }, 'expense'),
-    el('option', { value: 'income' }, 'income'));
+    el('option', { value: 'income' }, 'income'),
+    el('option', { value: 'transfer' }, 'transfer'));
   const groupSelect = el('select', {},
     el('option', { value: 'needs' }, 'needs'),
     el('option', { value: 'wants' }, 'wants'),
@@ -38,7 +39,8 @@ function categoriesPanel(state) {
     data.categories.push({
       id, name,
       type: typeSelect.value,
-      group: typeSelect.value === 'income' ? null : (groupSelect.value || null)
+      // Only expense categories carry a needs/wants/goals group.
+      group: typeSelect.value === 'expense' ? (groupSelect.value || null) : null
     });
     await state.save('categories');
     state.rerender();

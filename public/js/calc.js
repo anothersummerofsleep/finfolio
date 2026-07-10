@@ -29,9 +29,16 @@ export function monthlySummary(monthly, categories) {
       map.set(e.month, { month: e.month, income: 0, expense: 0, byCategory: {}, byAccount: {} });
     }
     const s = map.get(e.month);
-    const kind = typeOf[e.categoryId] === 'income' ? 'income' : 'expense';
-    s[kind] = r2(s[kind] + e.amount);
+    // Always tracked per-category so the entry is visible in breakdowns.
     s.byCategory[e.categoryId] = r2((s.byCategory[e.categoryId] || 0) + e.amount);
+    // A 'transfer' category (card repayments, moving cash between your own
+    // accounts) is neither income nor spend — it must not inflate expense,
+    // runway or the FI number, which would otherwise double-count card spend
+    // (already counted on the card side) against its bank/statement repayment.
+    const type = typeOf[e.categoryId];
+    if (type === 'transfer') continue;
+    const kind = type === 'income' ? 'income' : 'expense';
+    s[kind] = r2(s[kind] + e.amount);
     if (kind === 'expense') {
       const acct = e.accountId || 'unassigned';
       s.byAccount[acct] = r2((s.byAccount[acct] || 0) + e.amount);
