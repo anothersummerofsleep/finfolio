@@ -7,18 +7,20 @@ import { createStore } from './lib/store.js';
 import { ensureSeed, SEEDS } from './lib/seed.js';
 import {
   parseCsv, applyMapping, suggestCategory,
-  aggregateTransactions, mergeImport, addImportAggregates, addRules
+  aggregateTransactions, mergeImport, addImportAggregates, addRules,
+  suggestStatementName
 } from './lib/importer.js';
 import { extractPdfText, hasNoTextLayer } from './lib/pdf.js';
 import { extractPdfViaOcr } from './lib/ocr.js';
 import { getProfile, detectProfile, listProfiles } from './lib/pdf-profiles.js';
-import { listStatements, resolveStatementPath } from './lib/statements.js';
+import { listStatements, resolveStatementPath, renameStatement } from './lib/statements.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const PORT = Number(process.env.PORT || 5177);
 // Optional local folder of downloaded statements (e.g. one subfolder per bank)
-// the Import tab can browse and pick from directly — read-only, never written to.
+// the Import tab can browse and pick from directly — read-only, except for the
+// explicit rename-in-place offered after parsing (see /api/import/rename).
 const STATEMENTS_DIR = process.env.STATEMENTS_DIR ? path.resolve(process.env.STATEMENTS_DIR) : null;
 
 const store = createStore(DATA_DIR);
@@ -63,6 +65,22 @@ app.get('/api/import/browse', (req, res) => {
   res.json({ enabled: true, dir: STATEMENTS_DIR, files: listStatements(STATEMENTS_DIR) });
 });
 
+// Rename a file already sitting in the statements folder to the suggested
+// "YYYYMON_BANK" name offered on the review screen — a bank-downloads-as
+// "activity.csv" fix (Amex), never automatic, one file at a time.
+app.post('/api/import/rename', (req, res) => {
+  if (!STATEMENTS_DIR) return res.status(400).json({ error: 'Statements folder is not configured' });
+  const { sourcePath, newName } = req.body || {};
+  if (!sourcePath || !newName) {
+    return res.status(400).json({ error: 'sourcePath and newName are required' });
+  }
+  try {
+    res.json({ ok: true, path: renameStatement(STATEMENTS_DIR, sourcePath, newName) });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Crops the band around one OCR'd transaction line out of its cached page
 // image, so the UI can show "here's exactly what I read" next to a row —
 // the fastest way to check a suspect amount/date against the source without
@@ -104,6 +122,16 @@ function decorateWithSuggestions(transactions) {
     ...t,
     suggestedCategoryId: suggestCategory(t.description, rules)
   }));
+}
+
+// A "YYYYMON_BANK.ext" name for the review screen to offer as a rename, when
+// the statement came from the configured folder (nothing to rename otherwise).
+// Only banks/cards downloading with a useless generic filename need it (e.g.
+// Amex's CSV export is always "activity.csv") — harmless to offer regardless.
+function suggestedNameFor(sourcePath, transactions, accountId, ext) {
+  if (!sourcePath) return null;
+  const account = store.read('accounts', []).find((a) => a.id === accountId);
+  return suggestStatementName(transactions, account?.name, ext);
 }
 
 // Parse an uploaded statement. CSV needs a per-account column mapping; PDF needs
@@ -208,7 +236,8 @@ app.post('/api/import', async (req, res, next) => {
       return res.json({
         transactions: decorateWithSuggestions(transactions),
         errors, meta, profileUsed: profile.id, presetUsed: !profileId,
-        ocrUsed, meanConfidence, imageCacheId
+        ocrUsed, meanConfidence, imageCacheId,
+        suggestedFilename: suggestedNameFor(sourcePath, transactions, accountId, 'pdf')
       });
     }
 
@@ -229,7 +258,10 @@ app.post('/api/import', async (req, res, next) => {
     }
     const { transactions, errors } = applyMapping(rows, effective);
     store.saveImportFile(filename, content);
-    res.json({ transactions: decorateWithSuggestions(transactions), errors, presetUsed: !mapping });
+    res.json({
+      transactions: decorateWithSuggestions(transactions), errors, presetUsed: !mapping,
+      suggestedFilename: suggestedNameFor(sourcePath, transactions, accountId, 'csv')
+    });
   } catch (err) {
     next(err);
   }

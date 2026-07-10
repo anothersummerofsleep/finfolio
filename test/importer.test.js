@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   parseCsv, parseAmount, parseDate, applyMapping,
-  suggestCategory, aggregateTransactions, mergeImport, addImportAggregates, addRules
+  suggestCategory, aggregateTransactions, mergeImport, addImportAggregates, addRules,
+  suggestStatementName
 } from '../lib/importer.js';
 
 test('parseCsv handles quotes, embedded commas, CRLF', () => {
@@ -135,4 +136,26 @@ test('addRules dedupes by pattern+category', () => {
     { pattern: 'grab', categoryId: 'transport' }
   ]);
   assert.equal(out.length, 2);
+});
+
+test('suggestStatementName picks the month with the most transactions', () => {
+  const transactions = [
+    { month: '2026-01' }, { month: '2026-01' },
+    { month: '2025-12' }
+  ];
+  assert.equal(suggestStatementName(transactions, 'Amex', 'csv'), '2026JAN_AMEX.csv');
+});
+
+test('suggestStatementName ties go to the later month', () => {
+  const transactions = [{ month: '2025-12' }, { month: '2026-01' }];
+  assert.equal(suggestStatementName(transactions, 'Trust', 'pdf'), '2026JAN_TRUST.pdf');
+});
+
+test('suggestStatementName strips non-alphanumerics from the bank name, defaults when empty', () => {
+  assert.equal(suggestStatementName([{ month: '2026-03' }], 'DBS/POSB', 'csv'), '2026MAR_DBSPOSB.csv');
+  assert.equal(suggestStatementName([{ month: '2026-03' }], null, 'csv'), '2026MAR_STATEMENT.csv');
+});
+
+test('suggestStatementName returns null with no dated transactions', () => {
+  assert.equal(suggestStatementName([], 'Amex', 'csv'), null);
 });

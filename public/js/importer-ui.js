@@ -160,6 +160,8 @@ function toReview(flow, result) {
   flow.ocrUsed = result.ocrUsed || flow.ocrUsed;
   flow.meanConfidence = result.meanConfidence;
   flow.imageCacheId = result.imageCacheId || flow.imageCacheId;
+  flow.suggestedFilename = result.suggestedFilename || null;
+  flow.renamed = false;
 }
 
 // Image-only PDF: offer OCR (opt-in, since it's slow). Re-post with ocr:true.
@@ -318,6 +320,37 @@ function decorate(transactions) {
   }));
 }
 
+// Offers to rename the source file (only when it came from the statements
+// folder and isn't already named that way) to a "YYYYMON_BANK" name — the fix
+// for banks that download statements with a useless generic filename (e.g.
+// Amex's CSV export is always "activity.csv"). Explicit click, not automatic.
+function renameBanner(state, flow) {
+  if (!flow.sourcePath || !flow.suggestedFilename) return null;
+  if (flow.renamed) return el('p', { class: 'muted' }, `Renamed to ${flow.filename}.`);
+  if (flow.suggestedFilename === flow.filename) return null;
+
+  const doRename = async (ev) => {
+    const btn = ev.target;
+    btn.disabled = true;
+    try {
+      const result = await api.post('import/rename', {
+        sourcePath: flow.sourcePath, newName: flow.suggestedFilename
+      });
+      flow.sourcePath = result.path;
+      flow.filename = flow.suggestedFilename;
+      flow.renamed = true;
+      state.rerender();
+    } catch (err) {
+      toast(err.message, true);
+      btn.disabled = false;
+    }
+  };
+
+  return el('p', { class: 'muted' },
+    `Suggested name: ${flow.suggestedFilename} — `,
+    el('button', { class: 'ghost', onclick: doRename }, 'Rename file in statements folder'));
+}
+
 function reviewPanel(state) {
   const { data } = state;
   const flow = state.importFlow;
@@ -421,6 +454,7 @@ function reviewPanel(state) {
 
   return el('div', { class: 'panel' },
     el('h2', {}, `Review — ${flow.filename} (${flow.transactions.length} transactions)`),
+    renameBanner(state, flow),
     flow.ocrUsed
       ? el('p', { class: 'warn' },
           `Read via OCR${flow.meanConfidence ? ` (~${Math.round(flow.meanConfidence)}% confidence)` : ''} — `,
