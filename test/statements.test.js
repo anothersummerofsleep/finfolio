@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { listStatements, resolveStatementPath } from '../lib/statements.js';
+import { listStatements, resolveStatementPath, renameStatement } from '../lib/statements.js';
 
 function makeTempDir() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'finfolio-statements-'));
@@ -66,5 +66,36 @@ test('resolveStatementPath rejects traversal and absolute paths', () => {
   assert.throws(() => resolveStatementPath(dir, path.resolve(dir, '..', 'outside.pdf')));
   assert.throws(() => resolveStatementPath(dir, ''));
   assert.throws(() => resolveStatementPath(null, 'a.pdf'));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameStatement renames in place, keeping the file in its subfolder', () => {
+  const dir = makeTempDir();
+  fs.mkdirSync(path.join(dir, 'Amex'));
+  fs.writeFileSync(path.join(dir, 'Amex', 'activity.csv'), 'x');
+  const newPath = renameStatement(dir, 'Amex/activity.csv', '2026JAN_AMEX.csv');
+  assert.equal(newPath, 'Amex/2026JAN_AMEX.csv');
+  assert.ok(fs.existsSync(path.join(dir, 'Amex', '2026JAN_AMEX.csv')));
+  assert.ok(!fs.existsSync(path.join(dir, 'Amex', 'activity.csv')));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameStatement avoids clobbering a different existing file', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'jan.csv'), 'other statement');
+  fs.writeFileSync(path.join(dir, 'activity.csv'), 'this one');
+  const newPath = renameStatement(dir, 'activity.csv', 'jan.csv');
+  assert.equal(newPath, 'jan (2).csv');
+  assert.equal(fs.readFileSync(path.join(dir, 'jan.csv'), 'utf8'), 'other statement');
+  assert.equal(fs.readFileSync(path.join(dir, 'jan (2).csv'), 'utf8'), 'this one');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameStatement sanitizes the new name and rejects a missing source', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'activity.csv'), 'x');
+  const newPath = renameStatement(dir, 'activity.csv', '2026 JAN: AMEX?.csv');
+  assert.equal(newPath, '2026 JAN_ AMEX_.csv');
+  assert.throws(() => renameStatement(dir, 'does-not-exist.csv', 'x.csv'));
   fs.rmSync(dir, { recursive: true, force: true });
 });
