@@ -26,6 +26,27 @@ test('inferYear picks the latest 4-digit year on the statement', () => {
   assert.equal(inferYear('no year here'), null);
 });
 
+test('inferYear resolves a period line whose end date is missing its year', () => {
+  // A column-interleaved layout can split "26 Dec 2025" into "26 Dec" with
+  // the "2025" swept onto an unrelated line elsewhere in the document —
+  // reproduces a real Trust statement that got mis-dated a year into the
+  // future because a later "Payment due date 10 Jan 2026" line was the only
+  // other year in the document, and the old fallback picked the max year
+  // anywhere in the text.
+  const rawText = [
+    'Some Bank Statement',
+    'Block 206C 26 Nov 2025 - 26 Dec',
+    'Statement cycle',
+    'Payment due date 10 Jan 2026'
+  ].join('\n');
+  assert.equal(inferYear(rawText), 2025, 'end date inherits the start date\'s year, not the later due-date year');
+});
+
+test('inferYear bumps the end year across a Dec/Jan-spanning period with a year-less end date', () => {
+  const rawText = 'Block 12 24 Dec 2025 - 24 Jan\nPayment due date 05 Feb 2026';
+  assert.equal(inferYear(rawText), 2026);
+});
+
 test('HSBC: withdrawal is money-out (+), deposit is money-in (-)', () => {
   const doc = page(
     line([50, 'Statement'], [120, 'period'], [200, '01 Jun 2025 to 30 Jun 2025']),
