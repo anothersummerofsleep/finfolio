@@ -40,6 +40,26 @@ test('monthlySummary aggregates income, expenses, and accounts', () => {
   assert.equal(feb.expense, 300);
 });
 
+test('monthlySummary excludes transfer categories from income and expense', () => {
+  const cats = [
+    { id: 'salary', type: 'income' },
+    { id: 'food', type: 'expense' },
+    { id: 'bill', type: 'transfer' },   // credit-card repayment
+    { id: 'advice', type: 'transfer' }  // moving cash between own accounts
+  ];
+  const monthly = [
+    { month: '2026-01', categoryId: 'salary', amount: 5000 },
+    { month: '2026-01', categoryId: 'food', amount: 400, accountId: 'dbs-card' },
+    { month: '2026-01', categoryId: 'bill', amount: 2000, accountId: 'dbs-bank' },
+    { month: '2026-01', categoryId: 'advice', amount: 1500, accountId: 'dbs-bank' }
+  ];
+  const [jan] = monthlySummary(monthly, cats);
+  assert.equal(jan.income, 5000);
+  assert.equal(jan.expense, 400, 'transfers do not inflate expense (no double-count of card spend)');
+  assert.equal(jan.byCategory.bill, 2000, 'transfer still tracked per-category for visibility');
+  assert.equal(jan.byAccount['dbs-bank'], undefined, 'transfers excluded from spend-by-account');
+});
+
 const sleeves = [
   { id: 'cash', class: 'cash', liquid: true, fiEligible: false },
   { id: 'etf', class: 'equity', liquid: false, fiEligible: true },

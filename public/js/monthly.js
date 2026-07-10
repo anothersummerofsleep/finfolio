@@ -44,7 +44,10 @@ function gridTable(state, months) {
     ['Needs', data.categories.filter((c) => c.type === 'expense' && c.group === 'needs')],
     ['Wants', data.categories.filter((c) => c.type === 'expense' && c.group === 'wants')],
     ['Goals', data.categories.filter((c) => c.type === 'expense' && c.group === 'goals')],
-    ['Other', data.categories.filter((c) => c.type === 'expense' && !['needs', 'wants', 'goals'].includes(c.group))]
+    ['Other', data.categories.filter((c) => c.type === 'expense' && !['needs', 'wants', 'goals'].includes(c.group))],
+    // Transfers (card repayments, moving cash between own accounts) — tracked
+    // and editable here, but excluded from the Net row and all spend metrics.
+    ['Transfers', data.categories.filter((c) => c.type === 'transfer')]
   ].filter(([, cats]) => cats.length);
 
   const thead = el('thead', {}, el('tr', {},
@@ -79,7 +82,9 @@ function gridTable(state, months) {
     let net = 0;
     for (const e of data.monthly) {
       if (e.month !== m) continue;
-      net += typeOf[e.categoryId] === 'income' ? e.amount : -e.amount;
+      const type = typeOf[e.categoryId];
+      if (type === 'transfer') continue; // not income or spend — excluded from Net
+      net += type === 'income' ? e.amount : -e.amount;
     }
     return net;
   });
