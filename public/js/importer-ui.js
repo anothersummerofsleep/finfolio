@@ -156,6 +156,7 @@ function toReview(flow, result) {
   flow.step = 'review';
   flow.transactions = decorate(result.transactions);
   flow.errors = result.errors;
+  flow.meta = result.meta || null;
   flow.profileUsed = result.profileUsed;
   flow.ocrUsed = result.ocrUsed || flow.ocrUsed;
   flow.meanConfidence = result.meanConfidence;
@@ -351,6 +352,20 @@ function renameBanner(state, flow) {
     el('button', { class: 'ghost', onclick: doRename }, 'Rename file in statements folder'));
 }
 
+// Opening → closing balance per account, when the bank profile could read it
+// off the statement (currently DBS/POSB bank statements). Informational: a
+// quick reconcile against the parsed rows, and the closing figure is what the
+// Snapshots tab wants for the month.
+function balanceBanner(flow) {
+  const balances = flow.meta?.balances || [];
+  if (!balances.length) return null;
+  const parts = balances.map((b) =>
+    `${b.account}: ${b.opening != null ? money(b.opening, 2) : '?'} → ${b.closing != null ? money(b.closing, 2) : '?'}`);
+  return el('p', { class: 'muted' },
+    `Statement balance (opening → closing) — ${parts.join(' · ')}. `,
+    'Use the closing figure on the Snapshots tab to keep net worth current.');
+}
+
 function reviewPanel(state) {
   const { data } = state;
   const flow = state.importFlow;
@@ -360,6 +375,7 @@ function reviewPanel(state) {
   // Every field is editable — essential when the source is OCR (digits misread)
   // but harmless for CSV/text too. Date/description/amount update the txn in
   // place; the running total re-reconciles live.
+  const incomeIds = new Set(categories.filter((c) => c.type === 'income').map((c) => c.id));
   const updateSummary = () => {
     const categorized = flow.transactions.filter((t) => t.categoryId && t.categoryId !== 'skip');
     const skipped = flow.transactions.filter((t) => t.categoryId === 'skip').length;
@@ -373,6 +389,17 @@ function reviewPanel(state) {
       el('p', {}, 'Net of categorized rows: ', el('strong', {}, money(net, 2)),
         el('span', { class: 'muted' }, '  — positive = money out; reconcile against your statement total.'))
     );
+    // Salary often credits an account a statement doesn't cover, so no import
+    // can find it — point at manual entry when a month would end up income-less.
+    const hasIncomeRow = flow.transactions.some((t) => incomeIds.has(t.categoryId));
+    const stmtMonths = [...new Set(flow.transactions.map((t) => t.month).filter(Boolean))].sort();
+    const monthsMissingIncome = stmtMonths.filter(
+      (m) => !data.monthly.some((e) => e.month === m && incomeIds.has(e.categoryId)));
+    if (!hasIncomeRow && monthsMissingIncome.length) {
+      summaryBox.append(el('p', { class: 'muted' },
+        `No income rows in this statement, and none recorded yet for ${monthsMissingIncome.map(monthLabel).join(', ')}. ` +
+        'If your salary is paid into an account you don\'t import, enter it by hand: Monthly tab → click the Salary cell for the month (or set it up once as a recurring item in Registries).'));
+    }
   };
 
   const rowNode = (txn) => {
@@ -463,6 +490,7 @@ function reviewPanel(state) {
     flow.errors?.length
       ? el('p', { class: 'warn' }, `${flow.errors.length} row(s) could not be parsed and were skipped.`)
       : null,
+    balanceBanner(flow),
     el('div', { class: 'month-grid-wrap' }, table),
     summaryBox,
     el('div', { class: 'actions' },

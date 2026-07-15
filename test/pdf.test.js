@@ -327,7 +327,7 @@ test('DBS bank: withdrawal is money out (+), deposit money in (-); CPF table exc
     line([45, 'Date'], [113, 'Description'], [257, 'Contract No.'], [338, 'Withdrawal (-)'], [430, 'Deposit (+)'], [494, 'Balance']),
     line([45, '16/06/2026'], [97, 'PLACE FUND MGT'], [360, '2,050.00'])
   );
-  const { transactions, errors } = getProfile('dbs-bank').parse(doc);
+  const { transactions, errors, meta } = getProfile('dbs-bank').parse(doc);
   assert.equal(errors.length, 0);
   assert.equal(transactions.length, 2, 'only cash rows; brought/carried-forward and CPF excluded');
   const byDesc = Object.fromEntries(transactions.map((t) => [t.description, t]));
@@ -335,6 +335,11 @@ test('DBS bank: withdrawal is money out (+), deposit money in (-); CPF table exc
   assert.equal(byDesc['Advice Funds Transfer'].date, '2026-06-03');
   assert.equal(byDesc['Interest Earned'].amount, -0.06, 'deposit = money in (-)');
   assert.ok(!transactions.some((t) => /FUND MGT/.test(t.description)), 'CPF row excluded');
+  // Brought/Carried Forward rows aren't transactions, but their balances are
+  // captured per cash account — name only, never the account number.
+  assert.deepEqual(meta.balances, [
+    { account: 'DBS Multiplier Account', opening: 1210.68, closing: 2138 }
+  ], 'opening/closing balance read from the skipped summary rows; CPF gets none');
 });
 
 test('DBS bank: payee continuation stitched, reference lines dropped; card-payment row survives for review', () => {
