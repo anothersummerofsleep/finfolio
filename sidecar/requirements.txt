@@ -1,0 +1,11 @@
+# finfolio OCR sidecar (OPTIONAL) — Python deps. The Node app does NOT depend on
+# these; install them only if you want the PaddleOCR-VL engine. See README.md.
+#
+# GPU (recommended): install paddlepaddle-gpu from the matching CUDA index, e.g.
+#   pip install paddlepaddle-gpu==3.2.1 -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
+# CPU-only: pip install paddlepaddle   (much slower — minutes per page)
+paddleocr[doc-parser]
+fastapi
+uvicorn
+pillow
+numpy

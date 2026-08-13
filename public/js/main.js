@@ -34,17 +34,23 @@ const state = {
   rerender() {
     const view = document.getElementById('view');
     TABS[state.activeTab].render(view, state);
+  },
+  // Switch tabs programmatically (e.g. after a bulk import, jump to Review) —
+  // same effect as clicking the tab button.
+  setTab(name) {
+    if (!TABS[name]) return;
+    state.activeTab = name;
+    for (const btn of document.querySelectorAll('#tabs button')) {
+      btn.classList.toggle('active', btn.dataset.tab === name);
+    }
+    state.rerender();
   }
 };
 
 document.getElementById('tabs').addEventListener('click', (e) => {
   const tab = e.target.dataset?.tab;
   if (!tab) return;
-  state.activeTab = tab;
-  for (const btn of document.querySelectorAll('#tabs button')) {
-    btn.classList.toggle('active', btn.dataset.tab === tab);
-  }
-  state.rerender();
+  state.setTab(tab);
 });
 
 chartDefaults();

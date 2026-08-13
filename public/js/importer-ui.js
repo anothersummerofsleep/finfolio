@@ -19,6 +19,7 @@ export function render(container, state) {
   else if (flow.step === 'ocr') container.append(ocrPanel(state));
   else if (flow.step === 'profile') container.append(profilePanel(state));
   else if (flow.step === 'review') container.append(reviewPanel(state));
+  else if (flow.step === 'batch') container.append(batchPanel(state));
 }
 
 // Read a File as a base64 string (for binary PDF upload). CSV stays plain text.
@@ -93,8 +94,10 @@ function pickPanel(state) {
 
 // If STATEMENTS_DIR is configured, list its files (newest first) so the user
 // can import straight from a standing local folder instead of the OS file
-// picker every time. Absent/misconfigured folder → this section renders
-// nothing (feature is simply off, no error shown).
+// picker every time. Each row can be imported one at a time (the classic flow),
+// or several selected and sent through **bulk import** (OCR reads them all,
+// auto-detects each bank, → triage → Review queue). Absent/misconfigured folder
+// → this section renders nothing (feature is simply off, no error shown).
 function folderPickerSection(state, acctSelect, startImport) {
   const box = el('div', { class: 'mt' }, el('p', { class: 'muted' }, 'Checking for a statements folder…'));
 
@@ -105,30 +108,81 @@ function folderPickerSection(state, acctSelect, startImport) {
       box.append(el('p', { class: 'muted' }, `No statements found in ${res.dir}.`));
       return;
     }
-    const rows = res.files.map((f) => el('tr', {},
-      el('td', {}, f.path),
-      el('td', { class: 'num' }, fmtSize(f.size)),
-      el('td', {}, new Date(f.mtimeMs).toLocaleDateString('en-SG')),
-      el('td', {}, el('button', {
-        class: 'ghost',
-        onclick: () => startImport({
-          accountId: acctSelect.value, filename: f.path.split('/').pop(),
-          sourcePath: f.path, content: null, isPdf: false
-        })
-      }, 'Import'))
-    ));
+
+    const checks = new Map(); // path -> checkbox
+    const bulkBtn = el('button', { class: 'primary', disabled: true },
+      'Bulk import selected');
+    const refreshBulk = () => {
+      const n = [...checks.values()].filter((c) => c.checked).length;
+      bulkBtn.disabled = n === 0;
+      bulkBtn.textContent = n ? `Bulk import ${n} selected` : 'Bulk import selected';
+    };
+
+    const rows = res.files.map((f) => {
+      const check = el('input', { type: 'checkbox', onchange: refreshBulk });
+      checks.set(f.path, check);
+      return el('tr', {},
+        el('td', {}, check),
+        el('td', {}, f.path),
+        el('td', { class: 'num' }, fmtSize(f.size)),
+        el('td', {}, new Date(f.mtimeMs).toLocaleDateString('en-SG')),
+        el('td', {}, el('button', {
+          class: 'ghost',
+          onclick: () => startImport({
+            accountId: acctSelect.value, filename: f.path.split('/').pop(),
+            sourcePath: f.path, content: null, isPdf: false
+          })
+        }, 'Import'))
+      );
+    });
+
+    const selectAll = el('input', {
+      type: 'checkbox',
+      onchange: (e) => { for (const c of checks.values()) c.checked = e.target.checked; refreshBulk(); }
+    });
+    bulkBtn.onclick = () => {
+      const paths = [...checks.entries()].filter(([, c]) => c.checked).map(([p]) => p);
+      if (paths.length) bulkImport(state, paths);
+    };
+
     box.append(
       el('p', { class: 'muted' }, `Statements folder: ${res.dir}`),
       el('div', { class: 'month-grid-wrap' },
         el('table', {},
           el('thead', {}, el('tr', {},
-            el('th', {}, 'File'), el('th', { class: 'num' }, 'Size'),
+            el('th', {}, selectAll), el('th', {}, 'File'), el('th', { class: 'num' }, 'Size'),
             el('th', {}, 'Modified'), el('th', {}, ''))),
-          el('tbody', {}, rows)))
+          el('tbody', {}, rows))),
+      el('div', { class: 'actions' }, bulkBtn,
+        el('span', { class: 'muted' }, 'Reads every selected statement with OCR, auto-detects the bank, then you confirm the account before it lands in Review.'))
     );
   }).catch(() => { box.innerHTML = ''; }); // silent — folder browsing is optional
 
   return box;
+}
+
+// Kick off a bulk import: stream the selected folder paths through OCR, filling
+// the triage table live as each statement finishes (OCR of a folder is slow).
+async function bulkImport(state, sourcePaths) {
+  const flow = state.importFlow;
+  flow.step = 'batch';
+  flow.batchLoading = true;
+  flow.batchFiles = [];
+  flow.batchTotal = sourcePaths.length;
+  state.rerender();
+  try {
+    await api.postStream('import/batch', { sourcePaths }, (msg) => {
+      if (msg.type !== 'file') return;
+      const f = msg.file;
+      flow.batchFiles.push({ ...f, _include: f.ok && f.txnCount > 0, _accountId: f.guessedAccountId || '' });
+      state.rerender(); // progressive — the row appears as its OCR finishes
+    });
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    flow.batchLoading = false;
+    state.rerender();
+  }
 }
 
 // Dispatch an /api/import response to the next step (shared by every panel).
@@ -159,6 +213,7 @@ function toReview(flow, result) {
   flow.meta = result.meta || null;
   flow.profileUsed = result.profileUsed;
   flow.ocrUsed = result.ocrUsed || flow.ocrUsed;
+  flow.ocrEngine = result.ocrEngine || flow.ocrEngine;
   flow.meanConfidence = result.meanConfidence;
   flow.imageCacheId = result.imageCacheId || flow.imageCacheId;
   flow.suggestedFilename = result.suggestedFilename || null;
@@ -352,6 +407,24 @@ function renameBanner(state, flow) {
     el('button', { class: 'ghost', onclick: doRename }, 'Rename file in statements folder'));
 }
 
+// Reconciliation against the statement's own printed summary (PaddleOCR path).
+// The parsed rows should net to the statement's "Purchases − Payments"; a
+// mismatch means the OCR likely dropped or misread a row — flag it loudly so a
+// silent miss can't slip into the numbers. A clean match is confirmed too, to
+// build trust in the OCR import.
+function reconcileBanner(flow) {
+  const r = flow.meta?.reconciliation;
+  if (!r) return null;
+  if (r.ok) {
+    return el('p', { class: 'muted' },
+      `Reconciles to the statement summary (net ${money(r.parsedNet, 2)}).`);
+  }
+  return el('p', { class: 'warn' },
+    `The statement summary expects a net of ${money(r.expectedNet, 2)}, but the parsed rows sum to `,
+    `${money(r.parsedNet, 2)} (off by ${money(Math.abs(r.diff), 2)}). The OCR may have dropped or `,
+    'misread a transaction — check against your statement before importing.');
+}
+
 // Opening → closing balance per account, when the bank profile could read it
 // off the statement (currently DBS/POSB bank statements). Informational: a
 // quick reconcile against the parsed rows, and the closing figure is what the
@@ -364,6 +437,98 @@ function balanceBanner(flow) {
   return el('p', { class: 'muted' },
     `Statement balance (opening → closing) — ${parts.join(' · ')}. `,
     'Use the closing figure on the Snapshots tab to keep net worth current.');
+}
+
+// Bulk-import triage: one row per selected statement — auto-detected bank, an
+// editable account dropdown, txn count, and a reconciliation badge. Confirm the
+// accounts, then send everything to the Review queue to categorize.
+function batchPanel(state) {
+  const flow = state.importFlow;
+  const backToPick = () => { state.importFlow = { step: 'pick' }; state.rerender(); };
+
+  const files = flow.batchFiles || [];
+  const readable = files.filter((f) => f.ok);
+  const failed = files.filter((f) => !f.ok);
+  const accounts = state.data.accounts;
+
+  const acctOptions = (selected) => [
+    el('option', { value: '' }, '— pick account —'),
+    ...accounts.map((a) => el('option', { value: a.id, selected: a.id === selected }, a.name))
+  ];
+
+  const badge = (r) => {
+    if (!r) return el('span', { class: 'muted' }, '—');
+    if (r.ok) return el('span', {}, '✓ reconciles');
+    return el('span', { class: 'warn' }, `⚠ off by ${money(Math.abs(r.diff), 2)}`);
+  };
+
+  const engineLabel = (e) => (e === 'paddle' ? 'PaddleOCR' : e === 'tesseract' ? 'tesseract' : 'text layer');
+
+  const rows = readable.map((f) => el('tr', {},
+    el('td', {}, el('input', {
+      type: 'checkbox', checked: f._include,
+      onchange: (e) => { f._include = e.target.checked; }
+    })),
+    el('td', {}, f.filename),
+    el('td', {}, f.detectedBank?.name || el('span', { class: 'muted' }, 'unknown')),
+    el('td', {}, el('select',
+      { onchange: (e) => { f._accountId = e.target.value; } }, ...acctOptions(f._accountId))),
+    el('td', { class: 'num' }, String(f.txnCount)),
+    el('td', {}, badge(f.reconciliation)),
+    el('td', { class: 'muted' }, engineLabel(f.ocrEngine))));
+
+  const addAll = async () => {
+    const included = readable.filter((f) => f._include);
+    if (!included.length) return toast('Select at least one file to import', true);
+    const noAcct = included.find((f) => !f._accountId);
+    if (noAcct) return toast(`Pick an account for ${noAcct.filename}`, true);
+    try {
+      const result = await api.post('import/batch/commit', {
+        files: included.map((f) => ({
+          accountId: f._accountId, sourceFile: f.filename,
+          imageCacheId: f.imageCacheId, transactions: f.transactions
+        }))
+      });
+      await state.reload();
+      state.importFlow = { step: 'pick' };
+      toast(`Added ${result.added} transaction(s) from ${result.files} statement(s) to Review`);
+      state.setTab('reviewQueue');
+    } catch (err) {
+      toast(err.message, true);
+    }
+  };
+
+  const loading = flow.batchLoading;
+  const progress = loading
+    ? el('p', { class: 'warn' },
+        `Reading statements with OCR — ${files.length} of ${flow.batchTotal} done. This can take a few minutes; keep this tab open…`)
+    : null;
+
+  return el('div', { class: 'panel' },
+    el('h2', {}, `Bulk import — triage (${readable.length} readable${failed.length ? `, ${failed.length} skipped` : ''})`),
+    el('p', { class: 'muted' },
+      'Each statement was read and its bank auto-detected. Confirm the account for each, then send them ',
+      'to the Review queue to categorize. A ⚠ reconciliation flag means the OCR total doesn’t match the ',
+      'statement summary — a row may be missing, so check that one in Review.'),
+    progress,
+    readable.length
+      ? el('div', { class: 'month-grid-wrap' },
+          el('table', {},
+            el('thead', {}, el('tr', {},
+              el('th', {}, ''), el('th', {}, 'File'), el('th', {}, 'Bank'),
+              el('th', {}, 'Account'), el('th', { class: 'num' }, 'Txns'),
+              el('th', {}, 'Reconcile'), el('th', {}, 'Read by'))),
+            el('tbody', {}, rows)))
+      : (loading ? null : el('p', { class: 'warn' }, 'No statements could be read.')),
+    failed.length
+      ? el('div', { class: 'mt' },
+          el('p', { class: 'muted' }, 'Skipped:'),
+          ...failed.map((f) => el('p', { class: 'muted' }, `• ${f.filename} — ${f.reason}`)))
+      : null,
+    el('div', { class: 'actions' },
+      el('button', { class: 'primary', disabled: loading, onclick: addAll }, 'Add all to Review queue'),
+      el('button', { class: 'ghost', onclick: backToPick }, 'Cancel'))
+  );
 }
 
 function reviewPanel(state) {
@@ -483,13 +648,18 @@ function reviewPanel(state) {
     el('h2', {}, `Review — ${flow.filename} (${flow.transactions.length} transactions)`),
     renameBanner(state, flow),
     flow.ocrUsed
-      ? el('p', { class: 'warn' },
-          `Read via OCR${flow.meanConfidence ? ` (~${Math.round(flow.meanConfidence)}% confidence)` : ''} — `,
-          'OCR can misread digits. Verify every amount and date against your statement before importing.')
+      ? (flow.ocrEngine === 'paddle'
+          ? el('p', { class: 'muted' },
+              'Read via PaddleOCR-VL (local) — structured and cent-accurate on these statements. ',
+              'Spot-check amounts, and fill any row left with an empty date (highlighted) before importing.')
+          : el('p', { class: 'warn' },
+              `Read via OCR${flow.meanConfidence ? ` (~${Math.round(flow.meanConfidence)}% confidence)` : ''} — `,
+              'OCR can misread digits. Verify every amount and date against your statement before importing.'))
       : null,
     flow.errors?.length
       ? el('p', { class: 'warn' }, `${flow.errors.length} row(s) could not be parsed and were skipped.`)
       : null,
+    reconcileBanner(flow),
     balanceBanner(flow),
     el('div', { class: 'month-grid-wrap' }, table),
     summaryBox,
