@@ -16,6 +16,7 @@ import { paddleAvailable, extractPdfViaPaddle } from './lib/ocr-paddle.js';
 import { parsePaddleTransactions } from './lib/paddle-tables.js';
 import { getProfile, detectProfile, listProfiles } from './lib/pdf-profiles.js';
 import { listStatements, resolveStatementPath, renameStatement } from './lib/statements.js';
+import { guessAccountForProfile, buildReviewItems } from './lib/batch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
@@ -136,6 +137,92 @@ function suggestedNameFor(sourcePath, transactions, accountId, ext) {
   return suggestStatementName(transactions, account?.name, ext);
 }
 
+// Choose the OCR engine and read an image-only PDF: the optional PaddleOCR-VL
+// sidecar when it's running (more accurate, structured tables, no sidebar-crop
+// needed), else the bundled tesseract. OCR_ENGINE forces one: auto (default) |
+// paddle | tesseract. The caller decides WHEN to OCR (e.g. after a needsOcr
+// prompt); this just runs it. Shared by /api/import and the bulk endpoint.
+async function ocrExtractPdf(bytes, filename) {
+  const forced = process.env.OCR_ENGINE || 'auto';
+  const usePaddle = forced === 'paddle' || (forced !== 'tesseract' && await paddleAvailable());
+  const imageCacheDir = path.join(DATA_DIR, '.ocr-image-cache');
+  if (usePaddle) {
+    const extracted = await extractPdfViaPaddle(bytes, {
+      imageCacheDir,
+      onProgress: (p, n) => console.log(`OCR(paddle) ${filename}: page ${p}/${n}`)
+    });
+    return { extracted, ocrEngine: 'paddle', meanConfidence: extracted.meanConfidence, imageCacheId: extracted.imageCacheId };
+  }
+  const extracted = await extractPdfViaOcr(bytes, {
+    cachePath: path.join(DATA_DIR, '.tesseract-cache'),
+    onProgress: (p, n) => console.log(`OCR(tesseract) ${filename}: page ${p}/${n}`),
+    // The account-summary sidebar sits beside the transaction table; cropping it
+    // out before OCR stops Tesseract merging the two (see lib/pdf-render.js).
+    // Bumping scale to 4 was tried and rejected — it hallucinated an extra digit
+    // into clean amounts. PaddleOCR needs no crop.
+    cropRight: 0.7,
+    imageCacheDir
+  });
+  return { extracted, ocrEngine: 'tesseract', meanConfidence: extracted.meanConfidence, imageCacheId: extracted.imageCacheId };
+}
+
+// Parse extracted pages with the right strategy: PaddleOCR-VL's structured HTML
+// table first (falling back to the detected bank profile over synthesized lines
+// if it finds nothing), otherwise the bank profile. Returns { transactions,
+// errors, meta, profileUsed } — or null when a bank profile was needed
+// (text-layer / tesseract path) but none matched, so the caller can ask which
+// bank it is. Shared by /api/import and the bulk endpoint.
+function parseByEngine(extracted, ocrEngine, profile) {
+  if (ocrEngine === 'paddle') {
+    let parsed = parsePaddleTransactions(extracted.pages, { rawText: extracted.rawText });
+    let profileUsed = 'paddle-table';
+    if (!parsed.transactions.length && profile) {
+      parsed = profile.parse(extracted.pages);
+      profileUsed = profile.id;
+    }
+    return { ...parsed, profileUsed };
+  }
+  if (!profile) return null;
+  return { ...profile.parse(extracted.pages), profileUsed: profile.id };
+}
+
+// Parse one folder statement for the bulk-import triage — non-interactive:
+// always OCRs an image-only PDF, uses the generic table parser (no per-bank
+// prompt), reports the detected bank + reconciliation, and never throws for a
+// single bad file (a failure comes back as { ok:false, reason }).
+async function parseStatementForBatch(abs, sourcePath) {
+  const filename = path.basename(abs);
+  try {
+    if (!/\.pdf$/i.test(filename)) {
+      return { sourcePath, filename, ok: false, reason: 'Only PDF statements are supported in bulk import (import CSVs individually).' };
+    }
+    const bytes = fs.readFileSync(abs);
+    let extracted = await extractPdfText(bytes);
+    let ocrEngine = null;
+    let imageCacheId = null;
+    if (hasNoTextLayer(extracted)) {
+      ({ extracted, ocrEngine, imageCacheId } = await ocrExtractPdf(bytes, filename));
+      if (hasNoTextLayer(extracted)) return { sourcePath, filename, ok: false, reason: 'OCR found no readable text.' };
+    }
+    const profile = detectProfile(extracted.rawText);
+    const result = parseByEngine(extracted, ocrEngine, profile);
+    if (!result) return { sourcePath, filename, ok: false, reason: 'Could not identify the bank (no profile matched).' };
+    return {
+      sourcePath, filename, ok: true,
+      ocrEngine: ocrEngine || 'text',
+      detectedBank: profile ? { id: profile.id, name: profile.name } : null,
+      guessedAccountId: guessAccountForProfile(profile?.id, store.read('import-presets', {})),
+      txnCount: result.transactions.length,
+      errorsCount: result.errors.length,
+      reconciliation: result.meta?.reconciliation || null,
+      imageCacheId: imageCacheId || null,
+      transactions: decorateWithSuggestions(result.transactions)
+    };
+  } catch (err) {
+    return { sourcePath, filename, ok: false, reason: err.message };
+  }
+}
+
 // Parse an uploaded statement. CSV needs a per-account column mapping; PDF needs
 // a per-account bank profile. When neither is known, respond with a preview so
 // the client can pick one — the two "needs..." branches mirror each other.
@@ -190,35 +277,8 @@ app.post('/api/import', async (req, res, next) => {
               '(common for HSBC). OCR can read it. Run OCR?'
           });
         }
-        // Engine: the optional PaddleOCR-VL sidecar when it's running (more
-        // accurate, structured tables, no sidebar-crop needed), else the bundled
-        // tesseract. OCR_ENGINE forces one: auto (default) | paddle | tesseract.
-        const forced = process.env.OCR_ENGINE || 'auto';
-        const usePaddle = forced === 'paddle' || (forced !== 'tesseract' && await paddleAvailable());
-        const imageCacheDir = path.join(DATA_DIR, '.ocr-image-cache');
-        if (usePaddle) {
-          extracted = await extractPdfViaPaddle(bytes, {
-            imageCacheDir,
-            onProgress: (p, n) => console.log(`OCR(paddle) ${filename}: page ${p}/${n}`)
-          });
-          ocrEngine = 'paddle';
-        } else {
-          extracted = await extractPdfViaOcr(bytes, {
-            cachePath: path.join(DATA_DIR, '.tesseract-cache'),
-            onProgress: (p, n) => console.log(`OCR(tesseract) ${filename}: page ${p}/${n}`),
-            // These statements put a wide account-summary sidebar beside the
-            // transaction table; cropping it out before OCR avoids Tesseract
-            // merging the two into one line (see lib/pdf-render.js). Bumping
-            // scale to 4 was tried and rejected — it made Tesseract hallucinate
-            // an extra digit into clean amounts. PaddleOCR needs no crop.
-            cropRight: 0.7,
-            imageCacheDir
-          });
-          ocrEngine = 'tesseract';
-        }
+        ({ extracted, ocrEngine, meanConfidence, imageCacheId } = await ocrExtractPdf(bytes, filename));
         ocrUsed = true;
-        meanConfidence = extracted.meanConfidence;
-        imageCacheId = extracted.imageCacheId;
         if (hasNoTextLayer(extracted)) {
           return res.status(422).json({ error: 'OCR found no readable text in this PDF.' });
         }
@@ -231,42 +291,23 @@ app.post('/api/import', async (req, res, next) => {
       const chosenId = profileId || (preset && preset.type === 'pdf' ? preset.profileId : null);
       const profile = chosenId ? getProfile(chosenId) : detectProfile(extracted.rawText);
 
-      let parsed;
-      let profileUsed;
-      if (ocrEngine === 'paddle') {
-        // Table-first: read the transaction table PaddleOCR-VL returns as HTML.
-        // If that finds nothing (malformed/atypical statement), fall back to the
-        // detected bank profile over synthesized lines. No profile is required.
-        parsed = parsePaddleTransactions(extracted.pages, { rawText: extracted.rawText });
-        profileUsed = 'paddle-table';
-        if (!parsed.transactions.length && profile) {
-          parsed = profile.parse(extracted.pages);
-          profileUsed = profile.id;
-        }
-        if (profileId && savePreset) {
-          presets[accountId] = { type: 'pdf', profileId };
-          store.write('import-presets', presets);
-        }
-      } else {
-        // Text-layer PDF or tesseract OCR: a bank profile is required.
-        if (!profile) {
-          return res.json({
-            needsProfile: true,
-            profiles: listProfiles(),
-            detectedId: null,
-            ocrUsed, ocrEngine,
-            preview: extracted.pages[0]?.lines.slice(0, 12).map((l) => l.text) || []
-          });
-        }
-        if (profileId && savePreset) {
-          presets[accountId] = { type: 'pdf', profileId };
-          store.write('import-presets', presets);
-        }
-        parsed = profile.parse(extracted.pages);
-        profileUsed = profile.id;
+      const parsed = parseByEngine(extracted, ocrEngine, profile);
+      if (!parsed) {
+        // Text-layer PDF or tesseract OCR with no matching bank — ask the client.
+        return res.json({
+          needsProfile: true,
+          profiles: listProfiles(),
+          detectedId: null,
+          ocrUsed, ocrEngine,
+          preview: extracted.pages[0]?.lines.slice(0, 12).map((l) => l.text) || []
+        });
+      }
+      if (profileId && savePreset) {
+        presets[accountId] = { type: 'pdf', profileId };
+        store.write('import-presets', presets);
       }
 
-      const { transactions, errors, meta } = parsed;
+      const { transactions, errors, meta, profileUsed } = parsed;
       store.saveImportFile(filename, content, 'base64');
       return res.json({
         transactions: decorateWithSuggestions(transactions),
@@ -300,6 +341,75 @@ app.post('/api/import', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// Bulk import step 1 — parse many folder statements for triage (no writes).
+// Each file is OCR'd (image-only) and parsed generically, the bank is
+// auto-detected, and an account is guessed; the client shows a triage screen to
+// confirm/correct the account per file before anything lands.
+//
+// Streamed as NDJSON, one line per file as it finishes: OCR of a whole folder
+// can take many minutes, so a single buffered response would hit request
+// timeouts and show no progress. Headers flush immediately; the client fills the
+// triage table live. A single bad file streams { ok:false } without aborting.
+app.post('/api/import/batch', async (req, res) => {
+  if (!STATEMENTS_DIR) return res.status(400).json({ error: 'Statements folder is not configured' });
+  const { sourcePaths } = req.body || {};
+  if (!Array.isArray(sourcePaths) || !sourcePaths.length) {
+    return res.status(400).json({ error: 'sourcePaths array is required' });
+  }
+  res.writeHead(200, { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' });
+  const send = (obj) => res.write(JSON.stringify(obj) + '\n');
+  send({ type: 'start', total: sourcePaths.length });
+  for (const sp of sourcePaths) {
+    let file;
+    try {
+      let abs;
+      try { abs = resolveStatementPath(STATEMENTS_DIR, sp); }
+      catch (err) { abs = null; file = { sourcePath: sp, filename: sp, ok: false, reason: err.message }; }
+      if (!file) {
+        if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+          file = { sourcePath: sp, filename: sp, ok: false, reason: 'File not found in statements folder' };
+        } else {
+          file = await parseStatementForBatch(abs, sp);
+        }
+      }
+    } catch (err) {
+      file = { sourcePath: sp, filename: sp, ok: false, reason: err.message };
+    }
+    send({ type: 'file', file });
+  }
+  send({ type: 'done' });
+  res.end();
+});
+
+// Bulk import step 2 — append each included file's transactions to the review
+// queue (grouped by source file, one account each). Categorization then happens
+// in the Review tab, whose commit is additive (addImportAggregates), so
+// overlapping statement cycles top up instead of clobbering a shared month.
+app.post('/api/import/batch/commit', (req, res) => {
+  const { files } = req.body || {};
+  if (!Array.isArray(files)) return res.status(400).json({ error: 'files array is required' });
+  const queue = store.read('review-queue', []);
+  let added = 0;
+  let filesAdded = 0;
+  for (const f of files) {
+    if (!f.accountId || !Array.isArray(f.transactions) || !f.transactions.length) continue;
+    const items = buildReviewItems({
+      sourceFile: f.sourceFile || f.filename,
+      accountId: f.accountId,
+      imageCacheId: f.imageCacheId,
+      transactions: f.transactions
+    });
+    queue.push(...items);
+    added += items.length;
+    filesAdded++;
+  }
+  if (!added) {
+    return res.status(400).json({ error: 'Nothing to add — assign an account to at least one file' });
+  }
+  store.write('review-queue', queue);
+  res.json({ ok: true, added, files: filesAdded });
 });
 
 // Merge reviewed transactions into monthly aggregates.
