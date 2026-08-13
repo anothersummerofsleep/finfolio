@@ -159,6 +159,7 @@ function toReview(flow, result) {
   flow.meta = result.meta || null;
   flow.profileUsed = result.profileUsed;
   flow.ocrUsed = result.ocrUsed || flow.ocrUsed;
+  flow.ocrEngine = result.ocrEngine || flow.ocrEngine;
   flow.meanConfidence = result.meanConfidence;
   flow.imageCacheId = result.imageCacheId || flow.imageCacheId;
   flow.suggestedFilename = result.suggestedFilename || null;
@@ -352,6 +353,24 @@ function renameBanner(state, flow) {
     el('button', { class: 'ghost', onclick: doRename }, 'Rename file in statements folder'));
 }
 
+// Reconciliation against the statement's own printed summary (PaddleOCR path).
+// The parsed rows should net to the statement's "Purchases − Payments"; a
+// mismatch means the OCR likely dropped or misread a row — flag it loudly so a
+// silent miss can't slip into the numbers. A clean match is confirmed too, to
+// build trust in the OCR import.
+function reconcileBanner(flow) {
+  const r = flow.meta?.reconciliation;
+  if (!r) return null;
+  if (r.ok) {
+    return el('p', { class: 'muted' },
+      `Reconciles to the statement summary (net ${money(r.parsedNet, 2)}).`);
+  }
+  return el('p', { class: 'warn' },
+    `The statement summary expects a net of ${money(r.expectedNet, 2)}, but the parsed rows sum to `,
+    `${money(r.parsedNet, 2)} (off by ${money(Math.abs(r.diff), 2)}). The OCR may have dropped or `,
+    'misread a transaction — check against your statement before importing.');
+}
+
 // Opening → closing balance per account, when the bank profile could read it
 // off the statement (currently DBS/POSB bank statements). Informational: a
 // quick reconcile against the parsed rows, and the closing figure is what the
@@ -483,13 +502,18 @@ function reviewPanel(state) {
     el('h2', {}, `Review — ${flow.filename} (${flow.transactions.length} transactions)`),
     renameBanner(state, flow),
     flow.ocrUsed
-      ? el('p', { class: 'warn' },
-          `Read via OCR${flow.meanConfidence ? ` (~${Math.round(flow.meanConfidence)}% confidence)` : ''} — `,
-          'OCR can misread digits. Verify every amount and date against your statement before importing.')
+      ? (flow.ocrEngine === 'paddle'
+          ? el('p', { class: 'muted' },
+              'Read via PaddleOCR-VL (local) — structured and cent-accurate on these statements. ',
+              'Spot-check amounts, and fill any row left with an empty date (highlighted) before importing.')
+          : el('p', { class: 'warn' },
+              `Read via OCR${flow.meanConfidence ? ` (~${Math.round(flow.meanConfidence)}% confidence)` : ''} — `,
+              'OCR can misread digits. Verify every amount and date against your statement before importing.'))
       : null,
     flow.errors?.length
       ? el('p', { class: 'warn' }, `${flow.errors.length} row(s) could not be parsed and were skipped.`)
       : null,
+    reconcileBanner(flow),
     balanceBanner(flow),
     el('div', { class: 'month-grid-wrap' }, table),
     summaryBox,

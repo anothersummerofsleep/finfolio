@@ -12,6 +12,8 @@ import {
 } from './lib/importer.js';
 import { extractPdfText, hasNoTextLayer } from './lib/pdf.js';
 import { extractPdfViaOcr } from './lib/ocr.js';
+import { paddleAvailable, extractPdfViaPaddle } from './lib/ocr-paddle.js';
+import { parsePaddleTransactions } from './lib/paddle-tables.js';
 import { getProfile, detectProfile, listProfiles } from './lib/pdf-profiles.js';
 import { listStatements, resolveStatementPath, renameStatement } from './lib/statements.js';
 
@@ -174,6 +176,7 @@ app.post('/api/import', async (req, res, next) => {
       const bytes = Buffer.from(content, 'base64');
       let extracted = await extractPdfText(bytes);
       let ocrUsed = false;
+      let ocrEngine = null;
       let meanConfidence = null;
       let imageCacheId = null;
 
@@ -184,28 +187,35 @@ app.post('/api/import', async (req, res, next) => {
           return res.json({
             needsOcr: true,
             message: 'This PDF has no text layer — it looks like an image-only statement ' +
-              '(common for HSBC). OCR can read it, but it is slower (~10-20s) and amounts ' +
-              'should be verified. Run OCR?'
+              '(common for HSBC). OCR can read it. Run OCR?'
           });
         }
-        extracted = await extractPdfViaOcr(bytes, {
-          cachePath: path.join(DATA_DIR, '.tesseract-cache'),
-          onProgress: (p, n) => console.log(`OCR ${filename}: page ${p}/${n}`),
-          // These statements put a wide account-summary sidebar beside the
-          // transaction table; cropping it out before OCR avoids Tesseract
-          // merging the two into one line (see lib/ocr.js). Tried also
-          // bumping scale to 4 (more headroom since there's less to render),
-          // but it introduced a worse failure: Tesseract occasionally
-          // hallucinating an extra digit into an otherwise-clean amount
-          // ("1,556.86" read as "1,5656.86") — wrong in a way nothing here
-          // can detect, unlike a missing decimal point or an empty field.
-          // Cropping alone, at the original scale, fixed every case we found
-          // without introducing that risk.
-          cropRight: 0.7,
-          // Cache the rendered page images so a transaction can show "here's
-          // exactly the line I was read from" — see the /api/ocr-snippet route.
-          imageCacheDir: path.join(DATA_DIR, '.ocr-image-cache')
-        });
+        // Engine: the optional PaddleOCR-VL sidecar when it's running (more
+        // accurate, structured tables, no sidebar-crop needed), else the bundled
+        // tesseract. OCR_ENGINE forces one: auto (default) | paddle | tesseract.
+        const forced = process.env.OCR_ENGINE || 'auto';
+        const usePaddle = forced === 'paddle' || (forced !== 'tesseract' && await paddleAvailable());
+        const imageCacheDir = path.join(DATA_DIR, '.ocr-image-cache');
+        if (usePaddle) {
+          extracted = await extractPdfViaPaddle(bytes, {
+            imageCacheDir,
+            onProgress: (p, n) => console.log(`OCR(paddle) ${filename}: page ${p}/${n}`)
+          });
+          ocrEngine = 'paddle';
+        } else {
+          extracted = await extractPdfViaOcr(bytes, {
+            cachePath: path.join(DATA_DIR, '.tesseract-cache'),
+            onProgress: (p, n) => console.log(`OCR(tesseract) ${filename}: page ${p}/${n}`),
+            // These statements put a wide account-summary sidebar beside the
+            // transaction table; cropping it out before OCR avoids Tesseract
+            // merging the two into one line (see lib/pdf-render.js). Bumping
+            // scale to 4 was tried and rejected — it made Tesseract hallucinate
+            // an extra digit into clean amounts. PaddleOCR needs no crop.
+            cropRight: 0.7,
+            imageCacheDir
+          });
+          ocrEngine = 'tesseract';
+        }
         ocrUsed = true;
         meanConfidence = extracted.meanConfidence;
         imageCacheId = extracted.imageCacheId;
@@ -214,29 +224,54 @@ app.post('/api/import', async (req, res, next) => {
         }
       }
 
-      // Profile: explicit request → saved preset → auto-detect → ask the client.
+      // Profile: explicit request → saved preset → auto-detect. Used for the
+      // text-layer/tesseract parse, and (on the paddle path) for labeling +
+      // the fallback parse.
       const preset = presets[accountId];
       const chosenId = profileId || (preset && preset.type === 'pdf' ? preset.profileId : null);
       const profile = chosenId ? getProfile(chosenId) : detectProfile(extracted.rawText);
-      if (!profile) {
-        return res.json({
-          needsProfile: true,
-          profiles: listProfiles(),
-          detectedId: null,
-          ocrUsed,
-          preview: extracted.pages[0]?.lines.slice(0, 12).map((l) => l.text) || []
-        });
+
+      let parsed;
+      let profileUsed;
+      if (ocrEngine === 'paddle') {
+        // Table-first: read the transaction table PaddleOCR-VL returns as HTML.
+        // If that finds nothing (malformed/atypical statement), fall back to the
+        // detected bank profile over synthesized lines. No profile is required.
+        parsed = parsePaddleTransactions(extracted.pages, { rawText: extracted.rawText });
+        profileUsed = 'paddle-table';
+        if (!parsed.transactions.length && profile) {
+          parsed = profile.parse(extracted.pages);
+          profileUsed = profile.id;
+        }
+        if (profileId && savePreset) {
+          presets[accountId] = { type: 'pdf', profileId };
+          store.write('import-presets', presets);
+        }
+      } else {
+        // Text-layer PDF or tesseract OCR: a bank profile is required.
+        if (!profile) {
+          return res.json({
+            needsProfile: true,
+            profiles: listProfiles(),
+            detectedId: null,
+            ocrUsed, ocrEngine,
+            preview: extracted.pages[0]?.lines.slice(0, 12).map((l) => l.text) || []
+          });
+        }
+        if (profileId && savePreset) {
+          presets[accountId] = { type: 'pdf', profileId };
+          store.write('import-presets', presets);
+        }
+        parsed = profile.parse(extracted.pages);
+        profileUsed = profile.id;
       }
-      if (profileId && savePreset) {
-        presets[accountId] = { type: 'pdf', profileId };
-        store.write('import-presets', presets);
-      }
-      const { transactions, errors, meta } = profile.parse(extracted.pages);
+
+      const { transactions, errors, meta } = parsed;
       store.saveImportFile(filename, content, 'base64');
       return res.json({
         transactions: decorateWithSuggestions(transactions),
-        errors, meta, profileUsed: profile.id, presetUsed: !profileId,
-        ocrUsed, meanConfidence, imageCacheId,
+        errors, meta, profileUsed, presetUsed: !profileId,
+        ocrUsed, ocrEngine, meanConfidence, imageCacheId,
         suggestedFilename: suggestedNameFor(sourcePath, transactions, accountId, 'pdf')
       });
     }
