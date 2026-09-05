@@ -124,4 +124,4 @@ tesseract.js, verify amounts in the editable review.
 
 ## License
 
-MIT
+[MIT](LICENSE). Use it, fork it, build on it.
