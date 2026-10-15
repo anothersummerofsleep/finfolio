@@ -45,7 +45,10 @@ async function start(script, extraEnv) {
   const stop = async () => {
     if (child.exitCode === null && child.signalCode === null) child.kill();
     const timeout = new Promise((resolve) => setTimeout(resolve, 5000, 'timeout'));
-    if ((await Promise.race([exited, timeout])) === 'timeout') child.kill('SIGKILL');
+    if ((await Promise.race([exited, timeout])) === 'timeout') {
+      child.kill('SIGKILL');
+      await exited;
+    }
   };
   let out = '';
   try {
@@ -68,8 +71,9 @@ async function start(script, extraEnv) {
 
 test('demo mode ignores an inherited STATEMENTS_DIR', async () => {
   const decoy = makeDecoyStatements();
-  const server = await start(path.join('scripts', 'demo.js'), { STATEMENTS_DIR: decoy });
+  let server;
   try {
+    server = await start(path.join('scripts', 'demo.js'), { STATEMENTS_DIR: decoy });
     const browse = await (await fetch(`${server.base}/api/import/browse`)).json();
     assert.deepEqual(browse, { enabled: false, files: [] });
     const batch = await fetch(`${server.base}/api/import/batch`, {
@@ -79,7 +83,7 @@ test('demo mode ignores an inherited STATEMENTS_DIR', async () => {
     });
     assert.equal(batch.status, 400);
   } finally {
-    await server.stop();
+    await server?.stop();
     fs.rmSync(decoy, { recursive: true, force: true });
   }
 });
@@ -87,13 +91,14 @@ test('demo mode ignores an inherited STATEMENTS_DIR', async () => {
 test('real mode still honours STATEMENTS_DIR', async () => {
   const decoy = makeDecoyStatements();
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'finfolio-data-'));
-  const server = await start('server.js', { STATEMENTS_DIR: decoy, DATA_DIR: dataDir });
+  let server;
   try {
+    server = await start('server.js', { STATEMENTS_DIR: decoy, DATA_DIR: dataDir });
     const browse = await (await fetch(`${server.base}/api/import/browse`)).json();
     assert.equal(browse.enabled, true);
     assert.ok(JSON.stringify(browse.files).includes('decoy-statement.csv'));
   } finally {
-    await server.stop();
+    await server?.stop();
     fs.rmSync(decoy, { recursive: true, force: true });
     fs.rmSync(dataDir, { recursive: true, force: true });
   }
