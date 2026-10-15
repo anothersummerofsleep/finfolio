@@ -58,7 +58,8 @@ Then open http://127.0.0.1:5177. Set `DATA_DIR` and/or `PORT` to override defaul
 
 `npm run demo` copies the committed `sample-data/` into a gitignored `.demo-data/` folder
 and serves that copy, so edits made while exploring never touch real data or the repo.
-It does not reset `STATEMENTS_DIR`, so leave that unset while demoing.
+It also ignores any `STATEMENTS_DIR` set in your shell, so the demo never lists or
+imports from a real statements folder.
 
 Optionally point `STATEMENTS_DIR` at a standing local folder of downloaded statements
 (subfolders welcome, e.g. one per bank) so the Import tab can list and import them
@@ -115,7 +116,7 @@ public/js/review-queue.js  the Review tab: deferred/uncategorized transactions
 public/js/*.js       vanilla ES modules, one per tab; Chart.js for charts
 sidecar/             optional Python PaddleOCR-VL server (not a dependency of the Node app)
 test/                node:test suites for calc, importer, store, pdf, pdf-extract, ocr,
-                     ocr-paddle, paddle-tables, batch, statements
+                     ocr-paddle, paddle-tables, batch, statements, demo-mode isolation
 ```
 
 Dependencies: **Express** (server), **Chart.js** (charts), **pdfjs-dist** (PDF text
