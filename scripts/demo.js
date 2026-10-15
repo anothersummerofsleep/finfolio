@@ -17,5 +17,9 @@ fs.rmSync(dst, { recursive: true, force: true });
 fs.cpSync(src, dst, { recursive: true });
 
 process.env.DATA_DIR = dst;
+// The demo must never surface a real statements folder, even if STATEMENTS_DIR
+// is exported in the parent shell: the Import tab would otherwise list (and
+// could OCR) real statements into the throwaway data.
+delete process.env.STATEMENTS_DIR;
 console.log('demo mode — using a throwaway copy of sample-data/');
 await import('../server.js');
